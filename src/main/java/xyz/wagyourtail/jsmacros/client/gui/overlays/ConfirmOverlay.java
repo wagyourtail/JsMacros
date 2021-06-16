@@ -1,18 +1,18 @@
 package xyz.wagyourtail.jsmacros.client.gui.overlays;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.OrderedText;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Button;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ConfirmOverlay extends OverlayContainer {
     private final Consumer<ConfirmOverlay> accept;
-    private List<OrderedText> text;
+    private List<Text> text;
     private int lines;
     public boolean hcenter = true;
     private int vcenter;
@@ -29,7 +29,7 @@ public class ConfirmOverlay extends OverlayContainer {
     }
     
     public void setMessage(Text message) {
-        this.text = textRenderer.wrapLines(message, width - 6);
+        this.text = textRenderer.wrapStringToWidthAsList(message.asFormattedString(), width - 6).stream().map(LiteralText::new).collect(Collectors.toList());
         this.lines = Math.min(Math.max((height - 15) / textRenderer.fontHeight, 1), text.size());
         this.vcenter = ((height - 15) - (lines * textRenderer.fontHeight)) / 2;
     }
@@ -49,20 +49,20 @@ public class ConfirmOverlay extends OverlayContainer {
         
     }
     
-    protected void renderMessage(MatrixStack matrices) {
+    protected void renderMessage() {
         for (int i = 0; i < lines; ++i) {
-            int w = textRenderer.getWidth(text.get(i));
+            int w = textRenderer.getStringWidth(text.get(i).asFormattedString());
             float centeredX = hcenter ? x + width / 2F - w / 2F : x + 3;
-            textRenderer.draw(matrices, text.get(i), centeredX, y + 2 + vcenter + (i * textRenderer.fontHeight), 0xFFFFFF);
+            textRenderer.draw(text.get(i).asFormattedString(), centeredX, y + 2 + vcenter + (i * textRenderer.fontHeight), 0xFFFFFF);
         }
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        fill(matrices, x + 1, y + height - 13, x + width - 1, y + height - 12, 0xFFFFFFFF);
-        this.renderMessage(matrices);
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(int mouseX, int mouseY, float delta) {
+        this.renderBackground();
+        fill(x + 1, y + height - 13, x + width - 1, y + height - 12, 0xFFFFFFFF);
+        this.renderMessage();
+        super.render(mouseX, mouseY, delta);
     }
 
 }

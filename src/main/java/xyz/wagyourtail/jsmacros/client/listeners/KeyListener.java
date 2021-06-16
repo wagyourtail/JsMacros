@@ -32,7 +32,7 @@ public class KeyListener extends BaseListener {
             }
             this.mods = EventKey.getModInt(mods.toString());
         } catch(Exception e) {
-            key = InputUtil.UNKNOWN_KEY.getTranslationKey();
+            key = InputUtil.UNKNOWN_KEYCODE.getName();
         }
     }
     

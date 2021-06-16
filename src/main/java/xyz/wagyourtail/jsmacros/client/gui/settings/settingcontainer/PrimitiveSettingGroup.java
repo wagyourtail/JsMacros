@@ -1,7 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.settings.settingcontainer;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Scrollbar;
 import xyz.wagyourtail.jsmacros.client.gui.settings.SettingsOverlay;
 import xyz.wagyourtail.jsmacros.client.gui.settings.settingfields.*;
@@ -35,9 +34,9 @@ public class PrimitiveSettingGroup extends AbstractSettingContainer {
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(int mouseX, int mouseY, float delta) {
         for (AbstractSettingField<?> setting : settings) {
-            setting.render(matrices, mouseX, mouseY, delta);
+            setting.render(mouseX, mouseY, delta);
         }
     }
     

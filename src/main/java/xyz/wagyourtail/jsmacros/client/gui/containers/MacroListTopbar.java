@@ -1,7 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.containers;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
@@ -60,16 +59,16 @@ public class MacroListTopbar extends MultiElementContainer<MacroScreen> {
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        fill(matrices, x, y, x + width, y + 1, 0xFFFFFFFF);
-        fill(matrices, x, y + height - 2, x + width, y + height - 1, 0xFFFFFFFF);
-        fill(matrices, x, y + height - 1, x + width, y + height, 0xFF7F7F7F);
-        fill(matrices, x, y + 1, x + 1, y + height - 1, 0xFFFFFFFF);
-        fill(matrices, x + width - 1, y + 1, x + width, y + height - 1, 0xFFFFFFFF);
+    public void render(int mouseX, int mouseY, float delta) {
+        fill(x, y, x + width, y + 1, 0xFFFFFFFF);
+        fill(x, y + height - 2, x + width, y + height - 1, 0xFFFFFFFF);
+        fill(x, y + height - 1, x + width, y + height, 0xFF7F7F7F);
+        fill(x, y + 1, x + 1, y + height - 1, 0xFFFFFFFF);
+        fill(x + width - 1, y + 1, x + width, y + height - 1, 0xFFFFFFFF);
         int w = this.width - 12;
         
-        fill(matrices, x + (w / 12), y + 1, x + (w / 12) + 1, y + height - 1, 0xFFFFFFFF);
-        fill(matrices, x + (w / 4), y + 1, x + (w / 4) + 1, y + height - 1, 0xFFFFFFFF);
-        fill(matrices, x + width - 14, y + 1, x + width - 13, y + height - 1, 0xFFFFFFFF);
+        fill(x + (w / 12), y + 1, x + (w / 12) + 1, y + height - 1, 0xFFFFFFFF);
+        fill(x + (w / 4), y + 1, x + (w / 4) + 1, y + height - 1, 0xFFFFFFFF);
+        fill(x + width - 14, y + 1, x + width - 13, y + height - 1, 0xFFFFFFFF);
     }
 }

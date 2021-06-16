@@ -87,7 +87,7 @@ public class FPlayer extends BaseLibrary {
     public BlockDataHelper rayTraceBlock(double distance, boolean fluid) {
         assert mc.world != null;
         assert mc.player != null;
-        BlockHitResult h = (BlockHitResult) mc.player.raycast(distance, 0, fluid);
+        BlockHitResult h = (BlockHitResult) mc.player.rayTrace(distance, 0, fluid);
         if (h.getType() == HitResult.Type.MISS) return null;
         BlockState b = mc.world.getBlockState(h.getBlockPos());
         BlockEntity t = mc.world.getBlockEntity(h.getBlockPos());

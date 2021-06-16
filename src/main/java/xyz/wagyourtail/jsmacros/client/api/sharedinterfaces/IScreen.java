@@ -236,6 +236,6 @@ public interface IScreen extends IDraw2D<IScreen> {
      * DON'T TOUCH
      * @since 1.4.1
      */
-    void onRenderInternal(MatrixStack matrices, int mouseX, int mouseY, float delta);
+    void onRenderInternal(int mouseX, int mouseY, float delta);
     
 }

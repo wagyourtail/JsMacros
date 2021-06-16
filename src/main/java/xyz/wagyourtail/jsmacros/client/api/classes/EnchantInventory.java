@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.classes;
 
-import net.minecraft.client.gui.screen.ingame.EnchantmentScreen;
+import net.minecraft.client.gui.screen.ingame.EnchantingScreen;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.util.registry.Registry;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
@@ -8,9 +8,9 @@ import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
 /**
  * @since 1.3.1
  */
-public class EnchantInventory extends Inventory<EnchantmentScreen> {
+public class EnchantInventory extends Inventory<EnchantingScreen> {
     
-    protected EnchantInventory(EnchantmentScreen inventory) {
+    protected EnchantInventory(EnchantingScreen inventory) {
         super(inventory);
     }
     
@@ -19,7 +19,7 @@ public class EnchantInventory extends Inventory<EnchantmentScreen> {
      * @since 1.3.1
      */
     public int[] getRequiredLevels() {
-        return inventory.getScreenHandler().enchantmentPower;
+        return inventory.getContainer().enchantmentPower;
     }
     
     /**
@@ -29,9 +29,9 @@ public class EnchantInventory extends Inventory<EnchantmentScreen> {
     public TextHelper[] getEnchantments() {
         TextHelper[] enchants = new TextHelper[3];
         for (int j = 0; j < 3; ++j) {
-            Enchantment enchantment = Enchantment.byRawId(inventory.getScreenHandler().enchantmentId[j]);
+            Enchantment enchantment = Enchantment.byRawId(inventory.getContainer().enchantmentId[j]);
             if ((enchantment) != null) {
-                enchants[j] = new TextHelper(enchantment.getName(inventory.getScreenHandler().enchantmentLevel[j]));
+                enchants[j] = new TextHelper(enchantment.getName(inventory.getContainer().enchantmentLevel[j]));
             }
         }
         return enchants;
@@ -44,7 +44,7 @@ public class EnchantInventory extends Inventory<EnchantmentScreen> {
     public String[] getEnchantmentIds() {
         String[] enchants = new String[3];
         for (int j = 0; j < 3; ++j) {
-            Enchantment enchantment = Enchantment.byRawId(inventory.getScreenHandler().enchantmentId[j]);
+            Enchantment enchantment = Enchantment.byRawId(inventory.getContainer().enchantmentId[j]);
             if ((enchantment) != null) {
                 enchants[j] = Registry.ENCHANTMENT.getId(enchantment).toString();
             }
@@ -57,7 +57,7 @@ public class EnchantInventory extends Inventory<EnchantmentScreen> {
      * @since 1.3.1
      */
     public int[] getEnchantmentLevels() {
-        return inventory.getScreenHandler().enchantmentLevel;
+        return inventory.getContainer().enchantmentLevel;
     }
     
     /**
@@ -69,7 +69,7 @@ public class EnchantInventory extends Inventory<EnchantmentScreen> {
      */
     public boolean doEnchant(int index) {
         assert mc.interactionManager != null;
-        if (inventory.getScreenHandler().onButtonClick(mc.player, index)) {
+        if (inventory.getContainer().onButtonClick(mc.player, index)) {
             mc.interactionManager.clickButton(syncId, index);
             return true;
         }

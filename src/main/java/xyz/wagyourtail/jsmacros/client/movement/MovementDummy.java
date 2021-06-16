@@ -2,10 +2,7 @@ package xyz.wagyourtail.jsmacros.client.movement;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -31,7 +28,7 @@ public class MovementDummy extends LivingEntity {
     private int jumpingCooldown;
 
     public MovementDummy(MovementDummy player) {
-        this(player.getEntityWorld(), player.getPos(), player.getVelocity(), player.getBoundingBox(), player.isOnGround(), player.isSprinting(), player.isSneaking());
+        this(player.getEntityWorld(), player.getPos(), player.getVelocity(), player.getBoundingBox(), player.onGround, player.isSprinting(), player.isSneaking());
         this.inputs = new ArrayList<>(player.getInputs());
         this.coordsHistory = new ArrayList<>(player.getCoordsHistory());
         this.jumpingCooldown = player.jumpingCooldown;
@@ -39,7 +36,7 @@ public class MovementDummy extends LivingEntity {
     }
 
     public MovementDummy(ClientPlayerEntity player) {
-        this(player.getEntityWorld(), player.getPos(), player.getVelocity(), player.getBoundingBox(), player.isOnGround(), player.isSprinting(), player.isSneaking());
+        this(player.getEntityWorld(), player.getPos(), player.getVelocity(), player.getBoundingBox(), player.onGround, player.isSprinting(), player.isSneaking());
         for (EquipmentSlot value : EquipmentSlot.values()) {
             equippedStack.put(value, player.getEquippedStack(value).copy());
         }
@@ -138,11 +135,11 @@ public class MovementDummy extends LivingEntity {
      * so this is why we need to set the y-velocity to 0.<p>
      */
     @Override
-    public Vec3d method_26318(Vec3d movementInput, float f) {
-        if (this.isClimbing() && this.getVelocity().getY() < 0.0D && !this.getBlockState().isOf(Blocks.SCAFFOLDING) && this.isHoldingOntoLadder()) {
-            this.setVelocity(this.getVelocity().getX(), 0, this.getVelocity().getZ());
+    public void move(MovementType mt, Vec3d velocity) {
+        if (this.isClimbing() && velocity.getY() < 0.0D && this.getBlockState().getBlock() != Blocks.SCAFFOLDING && this.isHoldingOntoLadder()) {
+            this.setVelocity(velocity.getX(), 0, velocity.getZ());
         }
-        return super.method_26318(movementInput, f);
+        super.move(mt, this.getVelocity());
     }
 
     @Override

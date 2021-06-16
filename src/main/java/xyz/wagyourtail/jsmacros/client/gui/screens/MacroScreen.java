@@ -3,7 +3,6 @@ package xyz.wagyourtail.jsmacros.client.gui.screens;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.gui.containers.MacroContainer;
 import xyz.wagyourtail.jsmacros.client.gui.containers.MacroListTopbar;
@@ -40,25 +39,25 @@ public class MacroScreen extends BaseScreen {
     protected void init() {
         super.init();
         macros.clear();
-        keyScreen = this.addButton(new Button(0, 0, this.width / 6 - 1, 20, textRenderer, 0x00FFFFFF, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.keys"), null));
+        keyScreen = this.addButton(new Button(0, 0, this.width / 6 - 1, 20, font, 0x00FFFFFF, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.keys"), null));
 
-        eventScreen = this.addButton(new Button(this.width / 6 + 1, 0, this.width / 6 - 1, 20, textRenderer, 0x00FFFFFF, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.events"), null));
+        eventScreen = this.addButton(new Button(this.width / 6 + 1, 0, this.width / 6 - 1, 20, font, 0x00FFFFFF, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.events"), null));
 
-        this.addButton(new Button(this.width * 5 / 6 + 1, 0, this.width / 6 - 1, 20, textRenderer, 0x00FFFFFF, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.settings"), (btn) -> {
-            openOverlay(new SettingsOverlay(this.width / 4, this.height / 4, this.width / 2, this.height / 2, textRenderer, this));
+        this.addButton(new Button(this.width * 5 / 6 + 1, 0, this.width / 6 - 1, 20, font, 0x00FFFFFF, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.settings"), (btn) -> {
+            openOverlay(new SettingsOverlay(this.width / 4, this.height / 4, this.width / 2, this.height / 2, font, this));
         }));
 
-        topbar = new MacroListTopbar(this, this.width / 12, 25, this.width * 5 / 6, 14, this.textRenderer, ScriptTrigger.TriggerType.KEY_RISING);
+        topbar = new MacroListTopbar(this, this.width / 12, 25, this.width * 5 / 6, 14, this.font, ScriptTrigger.TriggerType.KEY_RISING);
 
         topScroll = 40;
         macroScroll = this.addButton(new Scrollbar(this.width * 23 / 24 - 4, 50, 8, this.height - 75, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
     
-        runningBtn = this.addButton(new Button(0, this.height - 12, this.width / 12, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.running"), (btn) -> {
-            assert client != null;
-            client.openScreen(new CancelScreen(this));
+        runningBtn = this.addButton(new Button(0, this.height - 12, this.width / 12, 12, font, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.running"), (btn) -> {
+            assert minecraft != null;
+            minecraft.openScreen(new CancelScreen(this));
         }));
         
-        aboutBtn = this.addButton(new Button(this.width * 11 / 12, this.height - 12, this.width / 12, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.about"), (btn) -> this.openOverlay(new AboutOverlay(this.width / 4, this.height / 4, this.width / 2, this.height / 2, textRenderer, this))));
+        aboutBtn = this.addButton(new Button(this.width * 11 / 12, this.height - 12, this.width / 12, 12, font, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.about"), (btn) -> this.openOverlay(new AboutOverlay(this.width / 4, this.height / 4, this.width / 2, this.height / 2, font, this))));
     }
     
     @Override
@@ -70,7 +69,7 @@ public class MacroScreen extends BaseScreen {
     }
 
     public void addMacro(ScriptTrigger macro) {
-        macros.add(new MacroContainer(this.width / 12, topScroll + macros.size() * 16, this.width * 5 / 6, 14, this.textRenderer, macro, this));
+        macros.add(new MacroContainer(this.width / 12, topScroll + macros.size() * 16, this.width * 5 / 6, 14, this.font, macro, this));
         macroScroll.setScrollPages(((macros.size() + 1) * 16) / (double) Math.max(1, this.height - 40));
     }
 
@@ -78,15 +77,15 @@ public class MacroScreen extends BaseScreen {
         File f = new File(Core.instance.config.macroFolder, macro.getRawMacro().scriptFile);
         File dir = Core.instance.config.macroFolder;
         if (!f.equals(Core.instance.config.macroFolder)) dir = f.getParentFile();
-        openOverlay(new FileChooser(width / 4, height / 4, width / 2, height / 2, this.textRenderer, dir, f, this, macro::setFile, this::editFile));
+        openOverlay(new FileChooser(width / 4, height / 4, width / 2, height / 2, this.font, dir, f, this, macro::setFile, this::editFile));
     }
     
     public void setEvent(MacroContainer macro) {
-        openOverlay(new EventChooser(width / 4, height / 4, width / 2, height / 2, this.textRenderer, macro.getRawMacro().event, this, macro::setEventType));
+        openOverlay(new EventChooser(width / 4, height / 4, width / 2, height / 2, this.font, macro.getRawMacro().event, this, macro::setEventType));
     }
     
     public void runFile() {
-        openOverlay(new FileChooser(width / 4, height / 4, width / 2, height / 2, this.textRenderer, Core.instance.config.macroFolder, null, this, (file) -> {
+        openOverlay(new FileChooser(width / 4, height / 4, width / 2, height / 2, this.font, Core.instance.config.macroFolder, null, this, (file) -> {
             try {
                 Core.instance.exec(new ScriptTrigger(ScriptTrigger.TriggerType.EVENT, "", file.getCanonicalPath().substring(Core.instance.config.macroFolder.getCanonicalPath().length()), true), null);
             } catch (IOException e) {
@@ -96,7 +95,7 @@ public class MacroScreen extends BaseScreen {
     }
 
     public void confirmRemoveMacro(MacroContainer macro) {
-        openOverlay(new ConfirmOverlay(width / 2 - 100, height / 2 - 50, 200, 100, this.textRenderer, new TranslatableText("jsmacros.confirmdeletemacro"), this, (conf) -> removeMacro(macro)));
+        openOverlay(new ConfirmOverlay(width / 2 - 100, height / 2 - 50, 200, 100, this.font, new TranslatableText("jsmacros.confirmdeletemacro"), this, (conf) -> removeMacro(macro)));
     }
     
     public void removeMacro(MacroContainer macro) {
@@ -123,34 +122,33 @@ public class MacroScreen extends BaseScreen {
 
     public void editFile(File file) {
         if (file != null && file.exists() && file.isFile()) {
-            assert client != null;
-            client.openScreen(new EditorScreen(this, file));
+            assert minecraft != null;
+            minecraft.openScreen(new EditorScreen(this, file));
         }
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        if (matrices == null) return;
-        this.renderBackground(matrices, 0);
+    public void render(int mouseX, int mouseY, float delta) {
+        this.renderBackground(0);
         
-        topbar.render(matrices, mouseX, mouseY, delta);
+        topbar.render(mouseX, mouseY, delta);
 
         for (AbstractButtonWidget b : ImmutableList.copyOf(this.buttons)) {
-            b.render(matrices, mouseX, mouseY, delta);
+            b.render(mouseX, mouseY, delta);
         }
 
         for (MacroContainer macro : ImmutableList.copyOf(this.macros)) {
-            macro.render(matrices, mouseX, mouseY, delta);
+            macro.render(mouseX, mouseY, delta);
         }
         
-        drawCenteredString(matrices, this.textRenderer, Core.instance.profile.getCurrentProfileName(), this.width * 7 / 12, 5, 0x7F7F7F);
+        drawCenteredString(this.font, Core.instance.profile.getCurrentProfileName(), this.width * 7 / 12, 5, 0x7F7F7F);
 
-        fill(matrices, this.width * 5 / 6 - 1, 0, this.width * 5 / 6 + 1, 20, 0xFFFFFFFF);
-        fill(matrices, this.width / 6 - 1, 0, this.width / 6 + 1, 20, 0xFFFFFFFF);
-        fill(matrices, this.width / 6 * 2, 0, this.width / 6 * 2 + 2, 20, 0xFFFFFFFF);
-        fill(matrices, 0, 20, width, 22, 0xFFFFFFFF);
+        fill(this.width * 5 / 6 - 1, 0, this.width * 5 / 6 + 1, 20, 0xFFFFFFFF);
+        fill(this.width / 6 - 1, 0, this.width / 6 + 1, 20, 0xFFFFFFFF);
+        fill(this.width / 6 * 2, 0, this.width / 6 * 2 + 2, 20, 0xFFFFFFFF);
+        fill(0, 20, width, 22, 0xFFFFFFFF);
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(mouseX, mouseY, delta);
     }
     
     @Override

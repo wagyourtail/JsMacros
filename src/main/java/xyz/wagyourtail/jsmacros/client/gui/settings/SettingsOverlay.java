@@ -2,7 +2,6 @@ package xyz.wagyourtail.jsmacros.client.gui.settings;
 
 import com.google.common.collect.Lists;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -132,8 +131,8 @@ public class SettingsOverlay extends OverlayContainer implements ICategoryTreePa
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
+    public void render(int mouseX, int mouseY, float delta) {
+        renderBackground();
         int w = width - 4;
         
         if (mouseX < x + w / 3) {
@@ -142,19 +141,19 @@ public class SettingsOverlay extends OverlayContainer implements ICategoryTreePa
             scroll = category.scroll;
         }
         
-        sections.render(matrices, mouseX, mouseY, delta);
+        sections.render(mouseX, mouseY, delta);
         
-        textRenderer.drawTrimmed(title, x + 3, y + 3, width - 14, 0xFFFFFF);
-        fill(matrices, x + 2, y + 12, x + width - 2, y + 13, 0xFFFFFFFF);
+        textRenderer.drawTrimmed(title.asFormattedString(), x + 3, y + 3, width - 14, 0xFFFFFF);
+        fill(x + 2, y + 12, x + width - 2, y + 13, 0xFFFFFFFF);
         
         //sep
-        fill(matrices, x + w / 3, y + 13, x + w / 3 + 1, y + height, 0xFFFFFFFF);
+        fill(x + w / 3, y + 13, x + w / 3 + 1, y + height, 0xFFFFFFFF);
         
         if (category != null) {
-            category.render(matrices, mouseX, mouseY, delta);
+            category.render(mouseX, mouseY, delta);
         }
         
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(mouseX, mouseY, delta);
     }
     
     static class SettingTree {

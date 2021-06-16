@@ -1,8 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.overlays;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Button;
@@ -42,13 +40,10 @@ public class TextPrompt extends OverlayContainer {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-        int lineNum = 0;
-        for (OrderedText line : textRenderer.wrapLines(message, width - 4)) {
-            textRenderer.draw(matrices, line, x + width / 2F - textRenderer.getWidth(line) / 2F, y + 5 + (lineNum++) * textRenderer.fontHeight, 0xFFFFFF);
-        }
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(int mouseX, int mouseY, float delta) {
+        this.renderBackground();
+        drawCenteredString(textRenderer, message.asFormattedString(), x + width / 2, y + 5, 0xFFFFFF);
+        super.render(mouseX, mouseY, delta);
     }
 
 }

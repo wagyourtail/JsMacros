@@ -28,12 +28,12 @@ public class EventKey implements BaseEvent {
     
     public EventKey(int key, int scancode, int action, int mods) {
         
-        InputUtil.Key keycode;
+        InputUtil.KeyCode keycode;
         if (key <= 7) keycode = InputUtil.Type.MOUSE.createFromCode(key);
         else keycode = InputUtil.Type.KEYSYM.createFromCode(key);
         
         this.action = action;
-        this.key = keycode.getTranslationKey();
+        this.key = keycode.getName();
         this.mods = getKeyModifiers(mods);
         
         
@@ -45,11 +45,11 @@ public class EventKey implements BaseEvent {
             return;
         }
         
-        if (keycode == InputUtil.UNKNOWN_KEY) return;
+        if (keycode == InputUtil.UNKNOWN_KEYCODE) return;
         
         synchronized (FKeyBind.pressedKeys) {
-            if (action == 1) FKeyBind.pressedKeys.add(keycode.getTranslationKey());
-            else FKeyBind.pressedKeys.remove(keycode.getTranslationKey());
+            if (action == 1) FKeyBind.pressedKeys.add(keycode.getName());
+            else FKeyBind.pressedKeys.remove(keycode.getName());
         }
 
         if (mc.currentScreen != null) {

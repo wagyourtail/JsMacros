@@ -4,7 +4,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.MerchantEntity;
+import net.minecraft.entity.passive.AbstractTraderEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.MathHelper;
@@ -173,7 +173,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
     public static EntityHelper<?> create(Entity e) {
         if (e instanceof ClientPlayerEntity) return new ClientPlayerEntityHelper<>((ClientPlayerEntity) e);
         if (e instanceof PlayerEntity) return new PlayerEntityHelper<>((PlayerEntity) e);
-        if (e instanceof MerchantEntity) return new MerchantEntityHelper((MerchantEntity) e);
+        if (e instanceof AbstractTraderEntity) return new MerchantEntityHelper((AbstractTraderEntity) e);
         if (e instanceof LivingEntity) return new LivingEntityHelper<>((LivingEntity) e);
         return new EntityHelper<>(e);
     }

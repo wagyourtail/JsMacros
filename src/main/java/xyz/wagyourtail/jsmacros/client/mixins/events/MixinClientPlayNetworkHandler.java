@@ -174,7 +174,9 @@ class MixinClientPlayNetworkHandler {
     
     @Inject(at = @At("TAIL"), method="onChunkDeltaUpdate")
     public void onChunkDeltaUpdate(ChunkDeltaUpdateS2CPacket packet, CallbackInfo info) {
-        packet.visitUpdates((blockPos, blockState) -> new EventBlockUpdate(blockState, world.getBlockEntity(blockPos), new BlockPos(blockPos), "STATE"));
+        for (ChunkDeltaUpdateS2CPacket.ChunkDeltaRecord record : packet.getRecords()) {
+            new EventBlockUpdate(record.getState(), world.getBlockEntity(record.getBlockPos()), record.getBlockPos(), "STATE");
+        }
     }
     
     @Inject(at = @At("TAIL"), method="onBlockEntityUpdate")

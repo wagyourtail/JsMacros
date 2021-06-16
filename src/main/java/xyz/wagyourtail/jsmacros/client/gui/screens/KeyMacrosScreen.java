@@ -29,8 +29,8 @@ public class KeyMacrosScreen extends MacroScreen {
         keyScreen.setColor(0x4FFFFFFF);
 
         eventScreen.onPress = (btn) -> {
-            assert client != null;
-            client.openScreen(new EventMacrosScreen(this));
+            assert minecraft != null;
+            minecraft.openScreen(new EventMacrosScreen(this));
         };
 
         Set<IEventListener> listeners = Core.instance.eventRegistry.getListeners().get(EventKey.class.getAnnotation(Event.class).value());
@@ -51,7 +51,7 @@ public class KeyMacrosScreen extends MacroScreen {
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         String translationKey = EventKey.getKeyModifiers(modifiers);
         if (!translationKey.equals("")) translationKey += "+";
-        translationKey += InputUtil.fromKeyCode(keyCode, scanCode).getTranslationKey();
+        translationKey += InputUtil.getKeyCode(keyCode, scanCode).getName();
         for (MacroContainer macro : macros) {
             if (!macro.onKey(translationKey)) return false;
         }
@@ -66,7 +66,7 @@ public class KeyMacrosScreen extends MacroScreen {
         if (hasAltDown()) mods += 4;
         String translationKey = EventKey.getKeyModifiers(mods);
         if (!translationKey.equals("")) translationKey += "+";
-        translationKey += InputUtil.Type.MOUSE.createFromCode(button).getTranslationKey();
+        translationKey += InputUtil.Type.MOUSE.createFromCode(button).getName();
         for (MacroContainer macro : macros) {
             if (!macro.onKey(translationKey)) return false;
         }

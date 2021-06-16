@@ -6,7 +6,6 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
@@ -147,7 +146,7 @@ public class RenderCommon {
         }
     
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(int mouseX, int mouseY, float delta) {
             RenderSystem.scaled(scale, scale, 1);
             RenderSystem.translated(x, y, 0);
             RenderSystem.rotatef(rotation, 0, 0, 1);
@@ -258,13 +257,13 @@ public class RenderCommon {
         }
     
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(int mouseX, int mouseY, float delta) {
             RenderSystem.translated(x, y, 0);
             RenderSystem.rotatef(rotation, 0, 0, 1);
             RenderSystem.translated(-x, -y, 0);
             mc.getTextureManager().bindTexture(imageid);
             RenderSystem.enableBlend();
-            DrawableHelper.drawTexture(matrices, x, y, width, height, imageX, imageY, regionWidth, regionHeight, textureWidth, textureHeight);
+            DrawableHelper.blit(x, y, width, height, imageX, imageY, regionWidth, regionHeight, textureWidth, textureHeight);
             RenderSystem.disableBlend();
             RenderSystem.translated(-x, -y, 0);
             RenderSystem.rotatef(-rotation, 0, 0, 1);
@@ -364,11 +363,11 @@ public class RenderCommon {
         }
     
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(int mouseX, int mouseY, float delta) {
             RenderSystem.translated(x1, y1, 0);
             RenderSystem.rotatef(rotation, 0, 0, 1);
             RenderSystem.translated(-x1, -y1, 0);
-            DrawableHelper.fill(matrices, x1, y1, x2, y2, color);
+            DrawableHelper.fill(x1, y1, x2, y2, color);
             RenderSystem.translated(x1, y1, 0);
             RenderSystem.rotatef(-rotation, 0, 0, 1);
             RenderSystem.translated(-x1, -y1, 0);
@@ -401,7 +400,7 @@ public class RenderCommon {
             this.x = x;
             this.y = y;
             this.color = color;
-            this.width = mc.textRenderer.getWidth(text);
+            this.width = mc.textRenderer.getStringWidth(text);
             this.shadow = shadow;
             this.scale = scale;
             this.rotation = MathHelper.wrapDegrees(rotation);
@@ -413,7 +412,7 @@ public class RenderCommon {
             this.x = x;
             this.y = y;
             this.color = color;
-            this.width = mc.textRenderer.getWidth(this.text);
+            this.width = mc.textRenderer.getStringWidth(this.text.asFormattedString());
             this.shadow = shadow;
             this.scale = scale;
             this.rotation = MathHelper.wrapDegrees(rotation);
@@ -461,7 +460,7 @@ public class RenderCommon {
          */
         public Text setText(String text) {
             this.text = new LiteralText(text);
-            this.width = mc.textRenderer.getWidth(text);
+            this.width = mc.textRenderer.getStringWidth(text);
             return this;
         }
         
@@ -472,7 +471,7 @@ public class RenderCommon {
          */
         public Text setText(TextHelper text) {
             this.text = text.getRaw();
-            this.width = mc.textRenderer.getWidth(this.text);
+            this.width = mc.textRenderer.getStringWidth(this.text.asFormattedString());
             return this;
         }
         
@@ -493,13 +492,13 @@ public class RenderCommon {
         }
     
         @Override
-        public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        public void render(int mouseX, int mouseY, float delta) {
             RenderSystem.scaled(scale, scale, 1);
             RenderSystem.translated(x, y, 0);
             RenderSystem.rotatef(rotation, 0, 0, 1);
             RenderSystem.translated(-x, -y, 0);
-            if (shadow) mc.textRenderer.drawWithShadow(matrices, text, (int)(x / scale), (int)(y / scale), color);
-            else mc.textRenderer.draw(matrices, text, (int)(x / scale), (int)(y / scale), color);
+            if (shadow) mc.textRenderer.drawWithShadow(text.asFormattedString(), (int)(x / scale), (int)(y / scale), color);
+            else mc.textRenderer.draw(text.asFormattedString(), (int)(x / scale), (int)(y / scale), color);
             RenderSystem.translated(x, y, 0);
             RenderSystem.rotatef(-rotation, 0, 0, 1);
             RenderSystem.translated(-x, -y, 0);

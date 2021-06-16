@@ -44,8 +44,6 @@ dependencies {
     include "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.key_bind_api_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
     include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
-    include "net.fabricmc.fabric-api:fabric-command-api-v1:${project.command_api_version}"
 
 	implementation "org.graalvm.sdk:graal-sdk:${project.graal_version}"
 	implementation "org.graalvm.js:js:${project.graal_version}"

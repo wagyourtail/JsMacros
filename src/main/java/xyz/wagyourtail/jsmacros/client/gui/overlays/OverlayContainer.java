@@ -3,7 +3,6 @@ package xyz.wagyourtail.jsmacros.client.gui.overlays;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import xyz.wagyourtail.jsmacros.client.gui.containers.MultiElementContainer;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Scrollbar;
 
@@ -96,28 +95,28 @@ public abstract class OverlayContainer extends MultiElementContainer<IOverlayPar
     
     public void onClose() {}
     
-    public void renderBackground(MatrixStack matrices) {
+    public void renderBackground() {
         // black bg
-        fill(matrices, x, y, x + width, y + height, 0xFF000000);
+        fill(x, y, x + width, y + height, 0xFF000000);
         // 2 layer border
-        fill(matrices, x, y, x + width, y + 1, 0x7F7F7F7F);
-        fill(matrices, x, y + height - 1, x + width, y + height, 0x7F7F7F7F);
-        fill(matrices, x, y + 1, x + 1, y + height - 1, 0x7F7F7F7F);
-        fill(matrices, x + width - 1, y + 1, x + width, y + height - 1, 0x7F7F7F7F);
+        fill(x, y, x + width, y + 1, 0x7F7F7F7F);
+        fill(x, y + height - 1, x + width, y + height, 0x7F7F7F7F);
+        fill(x, y + 1, x + 1, y + height - 1, 0x7F7F7F7F);
+        fill(x + width - 1, y + 1, x + width, y + height - 1, 0x7F7F7F7F);
 
-        fill(matrices, x + 1, y + 1, x + width - 1, y + 2, 0xFFFFFFFF);
-        fill(matrices, x + 1, y + height - 2, x + width - 1, y + height - 1, 0xFFFFFFFF);
-        fill(matrices, x + 1, y + 1, x + 2, y + height - 1, 0xFFFFFFFF);
-        fill(matrices, x + width - 2, y + 1, x + width - 1, y + height - 1, 0xFFFFFFFF);
+        fill(x + 1, y + 1, x + width - 1, y + 2, 0xFFFFFFFF);
+        fill(x + 1, y + height - 2, x + width - 1, y + height - 1, 0xFFFFFFFF);
+        fill(x + 1, y + 1, x + 2, y + height - 1, 0xFFFFFFFF);
+        fill(x + width - 2, y + 1, x + width - 1, y + height - 1, 0xFFFFFFFF);
 
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(int mouseX, int mouseY, float delta) {
         for (AbstractButtonWidget btn : buttons) {
-            btn.render(matrices, mouseX, mouseY, delta);
+            btn.render(mouseX, mouseY, delta);
         }
-        if (this.overlay != null) this.overlay.render(matrices, mouseX, mouseY, delta);
+        if (this.overlay != null) this.overlay.render(mouseX, mouseY, delta);
     }
 
 }

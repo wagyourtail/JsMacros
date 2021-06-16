@@ -26,11 +26,12 @@ import xyz.wagyourtail.jsmacros.client.movement.MovementQueue;
 import xyz.wagyourtail.jsmacros.core.Core;
 
 import java.io.File;
+import java.util.Objects;
 
 public class JsMacros implements ClientModInitializer {
     public static final String MOD_ID = "jsmacros";
     public static final Logger LOGGER  = LogManager.getLogger();
-    public static KeyBinding keyBinding = new KeyBinding("jsmacros.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, I18n.translate("jsmacros.title"));
+    public static KeyBinding keyBinding = new KeyBinding("jsmacros.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "jsmacros.title");
     public static BaseScreen prevScreen;
     protected static final File configFolder = new File(FabricLoader.getInstance().getConfigDir().toFile(), "jsMacros");
     
@@ -60,7 +61,7 @@ public class JsMacros implements ClientModInitializer {
 
     static public Text getKeyText(String translationKey) {
         try {
-            return InputUtil.fromTranslationKey(translationKey).getLocalizedText();
+            return new LiteralText(getLocalizedName(InputUtil.fromName(translationKey)));
         } catch(Exception e) {
             return new LiteralText(translationKey);
         }
@@ -68,10 +69,10 @@ public class JsMacros implements ClientModInitializer {
     
     static public String getScreenName(Screen s) {
         if (s == null) return null;
-        if (s instanceof HandledScreen) {
+        if (s instanceof ContainerScreen) {
             //add more ?
             if (s instanceof GenericContainerScreen) {
-                return String.format("%d Row Chest", ((GenericContainerScreen) s).getScreenHandler().getRows());
+                return String.format("%d Row Chest", ((GenericContainerScreen) s).getContainer().getRows());
             } else if (s instanceof Generic3x3ContainerScreen) {
                 return "3x3 Container";
             } else if (s instanceof AnvilScreen) {
@@ -82,9 +83,9 @@ public class JsMacros implements ClientModInitializer {
                 return "Blast Furnace";
             } else if (s instanceof BrewingStandScreen) {
                 return "Brewing Stand";
-            } else if (s instanceof CraftingScreen) {
+            } else if (s instanceof CraftingTableScreen) {
                 return "Crafting Table";
-            } else if (s instanceof EnchantmentScreen) {
+            } else if (s instanceof EnchantingScreen) {
                 return "Enchanting Table";
             } else if (s instanceof FurnaceScreen) {
                 return "Furnace";
@@ -98,8 +99,6 @@ public class JsMacros implements ClientModInitializer {
                 return "Villager";
             } else if (s instanceof ShulkerBoxScreen) {
                 return "Shulker Box";
-            } else if (s instanceof SmithingScreen) {
-                return "Smithing Table";
             } else if (s instanceof SmokerScreen) {
                 return "Smoker";
             } else if (s instanceof CartographyTableScreen) {
@@ -126,8 +125,23 @@ public class JsMacros implements ClientModInitializer {
     }
     
     @Deprecated
-    static public String getLocalizedName(InputUtil.Key keyCode) {
-        return I18n.translate(keyCode.getTranslationKey());
+    static public String getLocalizedName(InputUtil.KeyCode keyCode) {
+        String string = keyCode.getName();
+        int i = keyCode.getKeyCode();
+        String string2 = null;
+        switch(keyCode.getCategory()) {
+            case KEYSYM:
+                string2 = InputUtil.getKeycodeName(i);
+                break;
+            case SCANCODE:
+                string2 = InputUtil.getScancodeName(i);
+                break;
+            case MOUSE:
+                String string3 = I18n.translate(string);
+                string2 = Objects.equals(string3, string) ? I18n.translate(InputUtil.Type.MOUSE.getName(), i + 1) : string3;
+        }
+    
+        return string2 == null ? I18n.translate(string) : string2;
      }
     
     @Deprecated

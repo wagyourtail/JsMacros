@@ -1,7 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.settings;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.gui.containers.MultiElementContainer;
@@ -149,7 +148,7 @@ public class CategoryTreeContainer extends MultiElementContainer<ICategoryTreePa
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(int mouseX, int mouseY, float delta) {
     
     }
     

@@ -4,11 +4,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
-import net.minecraft.util.Language;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
@@ -24,8 +20,8 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
         this.parent = parent;
     }
     
-    public static OrderedText trimmed(TextRenderer textRenderer, StringVisitable str, int width) {
-        return Language.getInstance().reorder(textRenderer.trimToWidth(str,width));
+    public static String trimmed(TextRenderer textRenderer, String str, int width) {
+        return textRenderer.trimToWidth(str, width);
     }
     
     public void reload() {
@@ -34,19 +30,19 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
 
     @Override
     protected void init() {
-        assert client != null;
+        assert minecraft != null;
         buttons.clear();
         children.clear();
         super.init();
         overlay = null;
         JsMacros.prevScreen = this;
-        client.keyboard.setRepeatEvents(true);
+        minecraft.keyboard.enableRepeatEvents(true);
     }
 
     @Override
     public void removed() {
-        assert client != null;
-        client.keyboard.setRepeatEvents(false);
+        assert minecraft != null;
+        minecraft.keyboard.enableRepeatEvents(false);
     }
     
     @Override
@@ -134,8 +130,8 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        if (overlay != null) overlay.render(matrices, mouseX, mouseY, delta);
+    public void render(int mouseX, int mouseY, float delta) {
+        if (overlay != null) overlay.render(mouseX, mouseY, delta);
     }
 
     @Override
@@ -147,17 +143,17 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
 
     @Override
     public void onClose() {
-        assert client != null;
-        if (client.world == null)
+        assert minecraft != null;
+        if (minecraft.world == null)
             openParent();
         else {
             setFocused(null);
-            client.openScreen(null);
+            minecraft.openScreen(null);
         }
     }
     
     public void openParent() {
-        assert client != null;
-        client.openScreen(parent);
+        assert minecraft != null;
+        minecraft.openScreen(parent);
     }
 }

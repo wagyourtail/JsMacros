@@ -6,11 +6,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Language;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -36,9 +37,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class EditorScreen extends BaseScreen {
-    private static final OrderedText ellipses = new LiteralText("...").formatted(Formatting.DARK_GRAY).asOrderedText();
+    private static final Text ellipses = new LiteralText("...").formatted(Formatting.DARK_GRAY);
     public static final List<String> langs = Lists.newArrayList("javascript", "json", "lua", "python", "ruby", "typescript");
-    public static Style defaultStyle = Style.EMPTY.withFont(new Identifier("jsmacros", "ubuntumono"));
+    public static Style defaultStyle = new Style();
     protected final File file;
     protected final FileHandler handler;
     public final History history;
@@ -77,9 +78,10 @@ public class EditorScreen extends BaseScreen {
         savedString = content;
         
         this.handler = handler;
-        defaultStyle = Style.EMPTY.withFont(new Identifier(Core.instance.config.getOptions(ClientConfigV2.class).editorFont));
+        defaultStyle = new Style();
         
-        cursor = new SelectCursor(defaultStyle);
+        this.font = MinecraftClient.getInstance().getFontManager().getTextRenderer(new Identifier(Core.instance.config.getOptions(ClientConfigV2.class).editorFont));
+        cursor = new SelectCursor(defaultStyle, font);
         
         this.history = new History(content.replaceAll("\r\n", "\n").replaceAll("\t", "    "), cursor);
         
@@ -180,16 +182,20 @@ public class EditorScreen extends BaseScreen {
     @Override
     public void init() {
         super.init();
-        assert client != null;
-        
-        ellipsesWidth = client.textRenderer.getWidth(ellipses);
-        lineSpread = client.textRenderer.fontHeight + 1;
+        assert minecraft != null;
+    
+        this.font = minecraft.getFontManager().getTextRenderer(new Identifier("jsmacros", "ubuntumono"));
+        cursor.textRenderer = this.font;
+    
+        assert font != null;
+        ellipsesWidth = font.getStringWidth(ellipses.asFormattedString());
+        lineSpread = font.fontHeight + 1;
         int width = this.width - 10;
         
         scrollbar = addButton(new Scrollbar(width, 12, 10, height - 24, 0, 0xFF000000, 0xFFFFFFFF, 1, this::setScroll));
-        saveBtn = addButton(new Button(width / 2, 0, width / 6, 12, textRenderer, needSave() ? 0xFFA0A000 : 0xFF00A000, 0xFF000000, needSave() ? 0xFF707000 : 0xFF007000, 0xFFFFFF, new TranslatableText("jsmacros.save"), (btn) -> save()));
-        addButton(new Button(width * 4 / 6, 0, width / 6, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.close"), (btn) -> openParent()));
-        addButton(new Button(width, 0, 10, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(client.world == null ? "X" : "-"), (btn) -> onClose()));
+        saveBtn = addButton(new Button(width / 2, 0, width / 6, 12, font, needSave() ? 0xFFA0A000 : 0xFF00A000, 0xFF000000, needSave() ? 0xFF707000 : 0xFF007000, 0xFFFFFF, new TranslatableText("jsmacros.save"), (btn) -> save()));
+        addButton(new Button(width * 4 / 6, 0, width / 6, 12, font, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.close"), (btn) -> openParent()));
+        addButton(new Button(width, 0, 10, 12, font, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(minecraft.world == null ? "X" : "-"), (btn) -> onClose()));
         
         if (language == null)
             setLanguage(getDefaultLanguage());
@@ -216,48 +222,48 @@ public class EditorScreen extends BaseScreen {
         };
         
         
-        addButton(new Button(this.width - width / 8, height - 12, width / 8, 12, textRenderer,0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(language), (btn) -> {
-            int height = langs.size() * (textRenderer.fontHeight + 1) + 4;
-            openOverlay(new SelectorDropdownOverlay(btn.x, btn.y - height, btn.getWidth(), height, langs.stream().map(LiteralText::new).collect(Collectors.toList()), textRenderer, this, (i) -> {
+        addButton(new Button(this.width - width / 8, height - 12, width / 8, 12, font,0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(language), (btn) -> {
+            int height = langs.size() * (font.fontHeight + 1) + 4;
+            openOverlay(new SelectorDropdownOverlay(btn.x, btn.y - height, btn.getWidth(), height, langs.stream().map(LiteralText::new).collect(Collectors.toList()), font, this, (i) -> {
                 setLanguage(langs.get(i));
                 btn.setMessage(new LiteralText(langs.get(i)));
             }));
         }));
         
-        addButton(new Button(this.width - width / 4, height - 12, width / 8, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.settings"), (btn) -> {
-            openOverlay(new SettingsOverlay(this.width / 4, this.height / 4, this.width / 2, this.height / 2, textRenderer, this));
+        addButton(new Button(this.width - width / 4, height - 12, width / 8, 12, font, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.settings"), (btn) -> {
+            openOverlay(new SettingsOverlay(this.width / 4, this.height / 4, this.width / 2, this.height / 2, font, this));
         }));
         
-        this.fileName = new LiteralText(textRenderer.trimToWidth(file.getName(), (width - 10) / 2));
+        this.fileName = new LiteralText(font.trimToWidth(file.getName(), (width - 10) / 2));
         
         setScroll(0);
         scrollToCursor();
     }
     
     public void copyToClipboard() {
-        assert client != null;
-        client.keyboard.setClipboard(history.current.substring(cursor.startIndex, cursor.endIndex));
+        assert minecraft != null;
+        minecraft.keyboard.setClipboard(history.current.substring(cursor.startIndex, cursor.endIndex));
     }
     
     public void pasteFromClipboard() {
-        assert client != null;
+        assert minecraft != null;
         
-        String pasteContent = client.keyboard.getClipboard();
+        String pasteContent = minecraft.keyboard.getClipboard();
         history.replace(cursor.startIndex, cursor.endIndex - cursor.startIndex, pasteContent);
         compileRenderedText();
     }
     
     public void cutToClipboard() {
-        assert client != null;
-        
-        client.keyboard.setClipboard(history.current.substring(cursor.startIndex, cursor.endIndex));
+        assert minecraft != null;
+    
+        minecraft.keyboard.setClipboard(history.current.substring(cursor.startIndex, cursor.endIndex));
         history.replace(cursor.startIndex, cursor.endIndex - cursor.startIndex, "");
         compileRenderedText();
     }
     
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        assert client != null;
+        assert minecraft != null;
         if (overlay == null) {
             setFocused(null);
         } else if (overlay.keyPressed(keyCode, scanCode, modifiers)) {
@@ -519,18 +525,18 @@ public class EditorScreen extends BaseScreen {
             List<Text> displayList = new LinkedList<>();
             for (AutoCompleteSuggestion sug : suggestionList) {
                 if (sug.startIndex < startIndex) startIndex = sug.startIndex;
-                int width = textRenderer.getWidth(sug.displayText);
+                int width = font.getStringWidth(sug.displayText.asFormattedString());
                 if (width > maxWidth) maxWidth = width;
                 displayList.add(sug.displayText);
             }
             String[] lines = history.current.substring(0, startIndex).split("\n", -1);
-            int startCol = textRenderer.getWidth(new LiteralText(lines[lines.length - 1]).setStyle(defaultStyle));
+            int startCol = font.getStringWidth(new LiteralText(lines[lines.length - 1]).setStyle(defaultStyle).asFormattedString());
             int add = lineSpread - scroll % lineSpread;
             if (add == lineSpread) add = 0;
             int startRow = (lines.length - firstLine + 1) * lineSpread + add;
             
             openOverlay(
-                new SelectorDropdownOverlay(startCol + 30, startRow, maxWidth + 8, suggestionList.size() * lineSpread + 4, displayList, textRenderer, this, (i) -> {
+                new SelectorDropdownOverlay(startCol + 30, startRow, maxWidth + 8, suggestionList.size() * lineSpread + 4, displayList, font, this, (i) -> {
                     if (i == -1) return;
                     AutoCompleteSuggestion selected = suggestionList.get(i);
                     history.replace(selected.startIndex, cursor.startIndex - selected.startIndex, selected.suggestion);
@@ -569,7 +575,7 @@ public class EditorScreen extends BaseScreen {
                 saveBtn.setColor(0xFF00A000);
                 saveBtn.setHilightColor(0xFF707000);
             } catch (IOException e) {
-                openOverlay(new ConfirmOverlay(this.width / 4, height / 4, this.width / 2, height / 2, textRenderer, new TranslatableText("jsmacros.errorsaving").append(new LiteralText("\n\n" + e.getMessage())), this, null));
+                openOverlay(new ConfirmOverlay(this.width / 4, height / 4, this.width / 2, height / 2, font, new TranslatableText("jsmacros.errorsaving").append(new LiteralText("\n\n" + e.getMessage())), this, null));
             }
         }
     }
@@ -587,23 +593,22 @@ public class EditorScreen extends BaseScreen {
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        assert client != null;
-        renderBackground(matrices);
+    public void render(int mouseX, int mouseY, float delta) {
+        assert minecraft != null;
+        renderBackground();
         
-        textRenderer.drawWithShadow(matrices, fileName, 2, 2, 0xFFFFFF);
+        font.drawWithShadow(fileName.asFormattedString(), 2, 2, 0xFFFFFF);
         
-        textRenderer.drawWithShadow(matrices, String.format("%d ms", (int) textRenderTime), 2, height - 10, 0xFFFFFF);
-        textRenderer.drawWithShadow(matrices, lineCol, width - textRenderer.getWidth(lineCol) - (width - 10) / 4F - 2, height - 10, 0xFFFFFF);
+        font.drawWithShadow(String.format("%d ms", (int) textRenderTime), 2, height - 10, 0xFFFFFF);
+        font.drawWithShadow(lineCol, width - font.getStringWidth(lineCol) - (width - 10) / 8F - 2, height - 10, 0xFFFFFF);
         
-        fill(matrices, 0, 12, width - 10, height - 12, 0xFF2B2B2B);
-        fill(matrices, 28, 12, 29, height - 12, 0xFF707070);
-        fill(matrices, 0, 12, 1, height - 12, 0xFF707070);
-        fill(matrices, width - 11, 12, width - 10, height - 12, 0xFF707070);
-        fill(matrices, 1, 12, width - 11, 13, 0xFF707070);
-        fill(matrices, 1, height - 13, width - 11, height - 12, 0xFF707070);
+        fill(0, 12, width - 10, height - 12, 0xFF2B2B2B);
+        fill(28, 12, 29, height - 12, 0xFF707070);
+        fill(0, 12, 1, height - 12, 0xFF707070);
+        fill(width - 11, 12, width - 10, height - 12, 0xFF707070);
+        fill(1, 12, width - 11, 13, 0xFF707070);
+        fill(1, height - 13, width - 11, height - 12, 0xFF707070);
         
-        Style lineNumStyle = defaultStyle.withColor(TextColor.fromRgb(0xD8D8D8));
         int add = lineSpread - scroll % lineSpread;
         if (add == lineSpread) add = 0;
         int y = 13;
@@ -612,40 +617,40 @@ public class EditorScreen extends BaseScreen {
     
         for (int i = 0, j = firstLine; j <= lastLine && j < renderedText.length; ++i, ++j) {
             if (cursor.startLine == j && cursor.endLine == j) {
-                fill(matrices, 30 + cursor.startCol, y + add + i * lineSpread, 30 + cursor.endCol, y + add + (i + 1) * lineSpread, 0xFF33508F);
+                fill(30 + cursor.startCol, y + add + i * lineSpread, 30 + cursor.endCol, y + add + (i + 1) * lineSpread, 0xFF33508F);
             } else if (cursor.startLine == j) {
-                fill(matrices, 30 + cursor.startCol, y + add + i * lineSpread, width - 10, y + add + (i + 1) * lineSpread, 0xFF33508F);
+                fill(30 + cursor.startCol, y + add + i * lineSpread, width - 10, y + add + (i + 1) * lineSpread, 0xFF33508F);
             } else if (j > cursor.startLine && j < cursor.endLine) {
-                fill(matrices, 29, y + add + i * lineSpread, width - 10, y + add + (i + 1) * lineSpread, 0xFF33508F);
+                fill(29, y + add + i * lineSpread, width - 10, y + add + (i + 1) * lineSpread, 0xFF33508F);
             } else if (cursor.endLine == j) {
-                fill(matrices, 29, y + add + i * lineSpread, 30 + cursor.endCol, y + add + (i + 1) * lineSpread, 0xFF33508F);
+                fill(29, y + add + i * lineSpread, 30 + cursor.endCol, y + add + (i + 1) * lineSpread, 0xFF33508F);
             }
-            LiteralText lineNum = (LiteralText) new LiteralText(String.format("%d.", j + 1)).setStyle(lineNumStyle);
-            client.textRenderer.draw(matrices, lineNum, 28 - client.textRenderer.getWidth(lineNum), y + add + i * lineSpread, 0xFFFFFF);
-            client.textRenderer.draw(matrices, trim(renderedText[j]), 30, y + add + i * lineSpread, 0xFFFFFF);
+            LiteralText lineNum = new LiteralText(String.format("%d.", j + 1));
+            font.draw(lineNum.asFormattedString(), 28 - font.getStringWidth(lineNum.asFormattedString()), y + add + i * lineSpread, 0xD8D8D8);
+            font.draw(trim(renderedText[j]), 30, y + add + i * lineSpread, 0xFFFFFF);
         }
         
         for (AbstractButtonWidget b : ImmutableList.copyOf(this.buttons)) {
-            b.render(matrices, mouseX, mouseY, delta);
+            b.render(mouseX, mouseY, delta);
         }
         
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(mouseX, mouseY, delta);
     }
     
-    private OrderedText trim(Text text) {
-        assert client != null;
-        if (client.textRenderer.getWidth(text) > width - 30) {
-            OrderedText trimmed = Language.getInstance().reorder(client.textRenderer.trimToWidth(text, width - 40 - ellipsesWidth));
-            return OrderedText.concat(trimmed, ellipses);
+    private String trim(Text text) {
+        assert minecraft != null;
+        if (font.getStringWidth(text.asFormattedString()) > width - 30) {
+            String trimmed = font.trimToWidth(text.asFormattedString(), width - 40 - ellipsesWidth);
+            return trimmed + ellipses.asFormattedString();
         } else {
-            return text.asOrderedText();
+            return text.asFormattedString();
         }
     }
     
     @Override
     public void openParent() {
         if (needSave()) {
-            openOverlay(new ConfirmOverlay(width / 4, height / 4, width / 2, height / 2, textRenderer, new TranslatableText("jsmacros.nosave"), this, (container) -> super.openParent()));
+            openOverlay(new ConfirmOverlay(width / 4, height / 4, width / 2, height / 2, font, new TranslatableText("jsmacros.nosave"), this, (container) -> super.openParent()));
         } else {
             super.openParent();
         }
@@ -697,11 +702,11 @@ public class EditorScreen extends BaseScreen {
         }
         options.put("paste", this::pasteFromClipboard);
         options.putAll(codeCompiler.getRightClickOptions(index));
-        openOverlay(new SelectorDropdownOverlay(mouseX, mouseY, 100, (textRenderer.fontHeight + 1) * options.size() + 4, options.keySet().stream().map(LiteralText::new).collect(Collectors.toList()), textRenderer, this, i -> options.values().toArray(new Runnable[0])[i].run()));
+        openOverlay(new SelectorDropdownOverlay(mouseX, mouseY, 100, (font.fontHeight + 1) * options.size() + 4, options.keySet().stream().map(LiteralText::new).collect(Collectors.toList()), font, this, i -> options.values().toArray(new Runnable[0])[i].run()));
     }
     
     private int getIndexPosition(double x, double y) {
-        assert client != null;
+        assert minecraft != null;
         int add = lineSpread - scroll % lineSpread;
         if (add == lineSpread) add = 0;
         int line = firstLine + (int) ((y - add) / (double) lineSpread);
@@ -712,7 +717,7 @@ public class EditorScreen extends BaseScreen {
             line = lines.length - 1;
             col = lines[lines.length - 1].length();
         } else {
-            col = client.textRenderer.getTextHandler().trimToWidth(lines[line], (int) x, defaultStyle).length();
+            col = font.trimToWidth(lines[line], (int) x).length();
         }
         int count = 0;
         for (int i = 0; i < line; ++i) {
@@ -757,8 +762,9 @@ public class EditorScreen extends BaseScreen {
     
     @Override
     public void updateSettings() {
-        defaultStyle = Style.EMPTY.withFont(new Identifier(Core.instance.config.getOptions(ClientConfigV2.class).editorFont));
-        cursor.defaultStyle = defaultStyle;
+        assert minecraft != null;
+        font = minecraft.getFontManager().getTextRenderer(new Identifier(Core.instance.config.getOptions(ClientConfigV2.class).editorFont));
+        cursor.textRenderer = font;
         cursor.updateStartIndex(cursor.startIndex, history.current);
         cursor.updateEndIndex(cursor.endIndex, history.current);
         setLanguage(language);

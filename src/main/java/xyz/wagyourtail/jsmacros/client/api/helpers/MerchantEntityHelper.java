@@ -1,14 +1,14 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.entity.passive.MerchantEntity;
+import net.minecraft.entity.passive.AbstractTraderEntity;
 import net.minecraft.village.TradeOffer;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MerchantEntityHelper extends LivingEntityHelper<MerchantEntity> {
+public class MerchantEntityHelper extends LivingEntityHelper<AbstractTraderEntity> {
     
-    public MerchantEntityHelper(MerchantEntity e) {
+    public MerchantEntityHelper(AbstractTraderEntity e) {
         super(e);
     }
     

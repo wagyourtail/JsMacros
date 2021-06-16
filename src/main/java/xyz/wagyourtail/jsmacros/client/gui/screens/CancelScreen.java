@@ -3,7 +3,6 @@ package xyz.wagyourtail.jsmacros.client.gui.screens;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.gui.containers.RunningContextContainer;
@@ -33,15 +32,15 @@ public class CancelScreen extends BaseScreen {
         running.clear();
         s = this.addButton(new Scrollbar(width - 12, 5, 8, height-10, 0, 0xFF000000, 0xFFFFFFFF, 1, this::onScrollbar));
         
-        this.addButton(new Button(0, this.height - 12, this.width / 12, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.back"), (btn) -> this.onClose()));
+        this.addButton(new Button(0, this.height - 12, this.width / 12, 12, font, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.back"), (btn) -> this.onClose()));
     }
 
     public void addContainer(ScriptContext<?> t) {
         if (!t.isContextClosed()) {
-            running.add(new RunningContextContainer(10, topScroll + running.size() * 15, width - 26, 13, textRenderer, this, t));
             running.sort(new RTCSort());
             s.setScrollPages(running.size() * 15 / (double) (height - 20));
         }
+            running.add(new RunningContextContainer(10, topScroll + running.size() * 15, width - 26, 13, font, this, t));
     }
 
     public void removeContainer(RunningContextContainer t) {
@@ -76,14 +75,13 @@ public class CancelScreen extends BaseScreen {
     }
     
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        if (matrices == null) return;
-        this.renderBackground(matrices, 0);
+    public void render(int mouseX, int mouseY, float delta) {
+        this.renderBackground(0);
         List<ScriptContext<?>> tl = new ArrayList<>(Core.instance.contexts.keySet());
         
         for (RunningContextContainer r : ImmutableList.copyOf(this.running)) {
             tl.remove(r.t.get());
-            r.render(matrices, mouseX, mouseY, delta);
+            r.render(mouseX, mouseY, delta);
         }
         
         for (ScriptContext<?> t : tl) {
@@ -91,14 +89,14 @@ public class CancelScreen extends BaseScreen {
         }
         
         for (AbstractButtonWidget b : ImmutableList.copyOf(this.buttons)) {
-            b.render(matrices, mouseX, mouseY, delta);
+            b.render(mouseX, mouseY, delta);
         }
     }
 
     @Override
     public void removed() {
-        assert client != null;
-        client.keyboard.setRepeatEvents(false);
+        assert minecraft != null;
+        minecraft.keyboard.enableRepeatEvents(false);
     }
 
     @Override

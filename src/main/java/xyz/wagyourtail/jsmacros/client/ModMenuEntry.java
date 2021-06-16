@@ -19,4 +19,11 @@ public class ModMenuEntry implements ModMenuApi {
             return JsMacros.prevScreen;
         }
     }
+    
+    
+    //deprecated for 1.16
+    @Override
+    public String getModId() {
+        return "jsmacros";
+    }
 }

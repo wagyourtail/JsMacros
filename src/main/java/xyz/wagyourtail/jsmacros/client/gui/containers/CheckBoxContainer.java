@@ -1,7 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.containers;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Button;
@@ -40,9 +39,9 @@ public class CheckBoxContainer extends MultiElementContainer<IContainerParent> {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(int mouseX, int mouseY, float delta) {
         if (this.visible) {
-            textRenderer.drawTrimmed(message, x+height, y+2, width-height-2, 0xFFFFFF);
+            textRenderer.drawTrimmed(message.asFormattedString(), x+height, y+2, width-height-2, 0xFFFFFF);
         }
     }
 

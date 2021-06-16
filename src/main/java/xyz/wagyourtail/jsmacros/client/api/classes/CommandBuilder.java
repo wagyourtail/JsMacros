@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.fabricmc.fabric.impl.command.client.ClientCommandInternals;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.command.argument.*;
+import net.minecraft.command.arguments.*;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.api.helpers.CommandContextHelper;
 import xyz.wagyourtail.jsmacros.core.MethodWrapper;
@@ -50,8 +50,7 @@ public class CommandBuilder {
     }
 
     public CommandBuilder angleArg(String name) {
-        argument(name, AngleArgumentType::angle);
-        return this;
+        throw new NullPointerException("does not exist in 1.16.1");
     }
 
     public CommandBuilder blockArg(String name) {
@@ -80,7 +79,7 @@ public class CommandBuilder {
     }
 
     public CommandBuilder floatRangeArg(String name) {
-        argument(name, NumberRangeArgumentType::method_30918);
+        argument(name, NumberRangeArgumentType.FloatRangeArgumentType::new);
         return this;
     }
 
@@ -145,8 +144,7 @@ public class CommandBuilder {
     }
 
     public CommandBuilder uuidArgType(String name) {
-        argument(name, UuidArgumentType::uuid);
-        return this;
+        throw new NullPointerException("does not exist in 1.15.2");
     }
 
     public CommandBuilder regexArgType(String name, String regex, String flags) {

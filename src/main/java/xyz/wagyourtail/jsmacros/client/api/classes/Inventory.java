@@ -7,15 +7,15 @@ import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
 import net.minecraft.client.gui.screen.recipebook.RecipeResultCollection;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.container.CraftingContainer;
+import net.minecraft.container.Slot;
+import net.minecraft.container.SlotActionType;
 import net.minecraft.entity.passive.AbstractDonkeyEntity;
 import net.minecraft.entity.passive.HorseBaseEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.screen.AbstractRecipeScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.access.IHorseScreen;
 import xyz.wagyourtail.jsmacros.client.access.IInventory;
@@ -36,7 +36,7 @@ import java.util.stream.Stream;
  * @since 1.0.8
  */
  @SuppressWarnings("unused")
-public class Inventory<T extends HandledScreen<?>> {
+public class Inventory<T extends ContainerScreen<?>> {
     protected T inventory;
     protected Map<String, int[]> map;
     protected final ClientPlayerInteractionManager man;
@@ -51,10 +51,10 @@ public class Inventory<T extends HandledScreen<?>> {
     public static Inventory<?> create() {
         //prevent race condition
         final net.minecraft.client.gui.screen.Screen s = mc.currentScreen;
-        if (s instanceof HandledScreen) {
+        if (s instanceof ContainerScreen) {
             if (s instanceof MerchantScreen) return new VillagerInventory((MerchantScreen) s);
-            if (s instanceof EnchantmentScreen) return new EnchantInventory((EnchantmentScreen) s);
-            return new Inventory<>((HandledScreen<?>) s);
+            if (s instanceof EnchantingScreen) return new EnchantInventory((EnchantingScreen) s);
+            return new Inventory<>((ContainerScreen<?>) s);
         } else {
             assert mc.player != null;
             return new Inventory<>(new InventoryScreen(mc.player));
@@ -66,7 +66,7 @@ public class Inventory<T extends HandledScreen<?>> {
         this.player = mc.player;
         assert player != null;
         this.man = mc.interactionManager;
-        this.syncId = inventory.getScreenHandler().syncId;
+        this.syncId = this.inventory.getContainer().syncId;
     }
 
     /**
@@ -146,7 +146,7 @@ public class Inventory<T extends HandledScreen<?>> {
     public Inventory<T> closeAndDrop() {
         ItemStack held = player.inventory.getCursorStack();
         if (!held.isEmpty()) man.clickSlot(syncId, -999, 0, SlotActionType.PICKUP, player);
-        mc.execute(player::closeHandledScreen);
+        mc.execute(player::closeContainer);
         this.inventory = null;
         return this;
     }
@@ -155,7 +155,7 @@ public class Inventory<T extends HandledScreen<?>> {
      * Closes the inventory, and open gui if applicable.
      */
     public void close() {
-        mc.execute(player::closeHandledScreen);
+        mc.execute(player::closeContainer);
     }
 
     /**
@@ -183,14 +183,14 @@ public class Inventory<T extends HandledScreen<?>> {
      * @return the item in the slot.
      */
     public ItemStackHelper getSlot(int slot) {
-        return new ItemStackHelper(this.inventory.getScreenHandler().getSlot(slot).getStack());
+        return new ItemStackHelper(this.inventory.getContainer().getSlot(slot).getStack());
     }
 
     /**
      * @return the size of the container/inventory.
      */
     public int getTotalSlots() {
-        return this.inventory.getScreenHandler().slots.size();
+        return this.inventory.getContainer().slots.size();
     }
 
     /**
@@ -258,7 +258,7 @@ public class Inventory<T extends HandledScreen<?>> {
         if (this.inventory != mc.currentScreen) throw new RuntimeException("Inventory screen is not open.");
         Slot s = ((IInventory)this.inventory).jsmacros_getSlotUnder(x, y);
         if (s == null) return -999;
-        return this.inventory.getScreenHandler().slots.indexOf(s);
+        return this.inventory.getContainer().slots.indexOf(s);
     }
     
     /**
@@ -310,8 +310,8 @@ public class Inventory<T extends HandledScreen<?>> {
         Stream<Recipe<?>> recipes;
         RecipeBookResults res;
         IRecipeBookWidget recipeBookWidget;
-        if (inventory instanceof CraftingScreen) {
-            recipeBookWidget = (IRecipeBookWidget) ((CraftingScreen)inventory).getRecipeBookWidget();
+        if (inventory instanceof CraftingTableScreen) {
+            recipeBookWidget = (IRecipeBookWidget) ((CraftingTableScreen)inventory).getRecipeBookWidget();
         } else if (inventory instanceof InventoryScreen) {
             recipeBookWidget = (IRecipeBookWidget) ((InventoryScreen)inventory).getRecipeBookWidget();
         } else if (inventory instanceof AbstractFurnaceScreen) {
@@ -320,7 +320,7 @@ public class Inventory<T extends HandledScreen<?>> {
             return null;
         }
         if (mc.currentScreen != inventory) {
-            ((RecipeBookWidget)recipeBookWidget).initialize(0, 0, mc, true, (AbstractRecipeScreenHandler<?>) inventory.getScreenHandler());
+            ((RecipeBookWidget)recipeBookWidget).initialize(0, 0, mc, true, (CraftingContainer<?>) inventory.getContainer());
         }
         recipeBookWidget.jsmacros_refreshResultList();
         res = recipeBookWidget.jsmacros_getResults();
@@ -363,10 +363,10 @@ public class Inventory<T extends HandledScreen<?>> {
                 map.put("fuel", new int[] { slots - 9 - 27 - 1 });
                 map.put("input", new int[] { slots - 9 - 27 - 2 });
                 map.put("output", JsMacros.range(slots - 9 - 27 - 2));
-            } else if (inventory instanceof CraftingScreen) {
+            } else if (inventory instanceof CraftingTableScreen) {
                 map.put("input", JsMacros.range(slots - 9 - 27 - 9, slots - 9 - 27));
                 map.put("output", new int[] { slots - 9 - 27 - 10 });
-            } else if (inventory instanceof EnchantmentScreen) {
+            } else if (inventory instanceof EnchantingScreen) {
                 map.put("lapis", new int[] { slots - 9 - 27 - 1 });
                 map.put("item", new int[] { slots - 9 - 27 - 2 });
             } else if (inventory instanceof LoomScreen) {
@@ -380,11 +380,11 @@ public class Inventory<T extends HandledScreen<?>> {
             } else if (inventory instanceof HorseScreen) {
                 HorseBaseEntity h = (HorseBaseEntity) ((IHorseScreen)this.inventory).jsmacros_getEntity();
                 if (h.canBeSaddled()) map.put("saddle", new int[] {0});
-                if (h.hasArmorSlot()) map.put("armor", new int[] {1});
+                if (h.canEquip()) map.put("armor", new int[] {1});
                 if (h instanceof AbstractDonkeyEntity && ((AbstractDonkeyEntity) h).hasChest()) {
                     map.put("container", JsMacros.range(2, slots - 9 - 27));
                 }
-            } else if (inventory instanceof AnvilScreen || inventory instanceof  MerchantScreen || inventory instanceof SmithingScreen || inventory instanceof GrindstoneScreen || inventory instanceof CartographyTableScreen) {
+            } else if (inventory instanceof AnvilScreen || inventory instanceof MerchantScreen || inventory instanceof GrindstoneScreen || inventory instanceof CartographyTableScreen) {
                 map.put("output", new int[] { slots - 9 - 27 - 1 });
                 map.put("input", JsMacros.range(slots - 9 - 27 - 1));
             }
