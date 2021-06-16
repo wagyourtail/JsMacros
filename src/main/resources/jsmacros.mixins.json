@@ -20,6 +20,7 @@
     "access.MixinScreen",
     "access.MixinSignEditScreen",
     "access.MixinStyleSerializer",
+    "access.MixinTranslationStorage",
     "access.MixinTrueTypeFont",
     "events.MixinChatHud",
     "events.MixinClientPlayerEntity",

@@ -1,0 +1,13 @@
+modLoader="javafml"
+loaderVersion="[33,)"
+issueTrackerURL="https://github.com/wagyourtail/jsmacros"
+license = "MPL-2.0"
+
+[[mods]]
+modId = "jsmacros"
+version = "${version}"
+displayName = "JS Macros"
+authors = "Wagyourtail"
+description = '''
+    Macro Mod for Block Game
+'''

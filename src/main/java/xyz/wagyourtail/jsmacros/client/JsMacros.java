@@ -1,8 +1,5 @@
 package xyz.wagyourtail.jsmacros.client;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -12,6 +9,14 @@ import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.graalvm.polyglot.Context;
@@ -27,23 +32,35 @@ import xyz.wagyourtail.jsmacros.core.Core;
 
 import java.io.File;
 
-public class JsMacros implements ClientModInitializer {
+@Mod(JsMacros.MOD_ID)
+public class JsMacros {
     public static final String MOD_ID = "jsmacros";
-    public static final Logger LOGGER  = LogManager.getLogger();
+    public static final Logger LOGGER  = LogManager.getLogger(MOD_ID);
     public static KeyBinding keyBinding = new KeyBinding("jsmacros.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, I18n.translate("jsmacros.title"));
     public static BaseScreen prevScreen;
-    protected static final File configFolder = new File(FabricLoader.getInstance().getConfigDir().toFile(), "jsMacros");
-    
+    protected static final File configFolder = new File(MinecraftClient.getInstance().runDirectory, "config/jsMacros");
     public static final Core core = Core.createInstance(EventRegistry::new, Profile::new, configFolder, new File(configFolder, "Macros"), LOGGER);
     
-    @Override
-    public void onInitializeClient() {
+    public JsMacros() {
         try {
             core.config.addOptions("client", ClientConfigV2.class);
         } catch (IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
-        KeyBindingHelper.registerKeyBinding(keyBinding);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onInitializeClient);
+        ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> this::onConfig);
+        
+    }
+    
+    public Screen onConfig(MinecraftClient mc, Screen parent) {
+        prevScreen.setParent(parent);
+        return prevScreen;
+        
+    }
+    
+    public void onInitializeClient(FMLClientSetupEvent init) {
+        ClientRegistry.registerKeyBinding(keyBinding);
+        
         prevScreen = new KeyMacrosScreen(null);
         
         Thread t = new Thread(() -> {
@@ -56,6 +73,8 @@ public class JsMacros implements ClientModInitializer {
 
         // Init MovementQueue
         MovementQueue.clear();
+        
+        FakeFabricLoader.instance.loadEntries();
     }
 
     static public Text getKeyText(String translationKey) {

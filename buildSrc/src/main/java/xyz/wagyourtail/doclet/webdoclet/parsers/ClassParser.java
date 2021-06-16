@@ -255,25 +255,12 @@ public class ClassParser {
 
     private XMLBuilder parseMethod(ExecutableElement element) {
         XMLBuilder method = new XMLBuilder("div").setClass("method classItem").setID(memberId(element));
-        XMLBuilder methodTitle;
-        method.append(methodTitle = new XMLBuilder("h4", true).setClass("methodTitle classItemTitle").append(
-            ".", element.getSimpleName()
-        ));
-
-        List<? extends TypeParameterElement> params = element.getTypeParameters();
-        if (params.size() > 0) {
-            methodTitle.append("<");
-            for (TypeParameterElement param : params) {
-                methodTitle.append(parseType(param.asType()), ", ");
-            }
-            methodTitle.pop();
-            methodTitle.append(">");
-        }
-
-        methodTitle.append("(",
-            createTitleParams(element).setClass("methodParams"),
+        //TODO: type params
+        method.append(new XMLBuilder("h4", true).setClass("methodTitle classItemTitle").append(
+            ".", element.getSimpleName(), "(",
+                createTitleParams(element).setClass("methodParams"),
             ")"
-        );
+        ));
         method.append(createFlags(element, false));
         method.append(getSince(element));
 
@@ -463,11 +450,11 @@ public class ClassParser {
                 if (typeLink.options.get("href").equals("\"\"")) typeLink.setClass("type deadType");
                 else typeLink.setClass("type");
 
-                List<? extends TypeMirror> params = ((DeclaredType) type).getTypeArguments();
+                List<? extends TypeParameterElement> params = ((TypeElement) ((DeclaredType) type).asElement()).getTypeParameters();
                 if (params != null && !params.isEmpty()) {
                     builder.append("<");
-                    for (TypeMirror param : params) {
-                        builder.append(parseType(param), ", ");
+                    for (TypeParameterElement param : params) {
+                        builder.append(parseType(param.asType()), ", ");
                     }
                     builder.pop();
                     builder.append(">");
@@ -547,7 +534,7 @@ public class ClassParser {
                 for (VariableElement parameter : ((ExecutableElement) member).getParameters()) {
                     s.append(parameter.getSimpleName()).append(", ");
                 }
-                if (((ExecutableElement) member).getParameters().size() > 0) s.setLength(s.length() - 2);
+                s.setLength(s.length() - 2);
                 s.append(")");
             }
             default -> throw new UnsupportedOperationException(String.valueOf(member.getKind()));

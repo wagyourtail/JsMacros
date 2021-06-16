@@ -62,6 +62,7 @@ public class FWrapper extends PerExecLanguageLibrary<Context> implements IFWrapp
     /**
      * @param c
      *
+     * @custom.replaceParams c: (arg0?: A, arg1?: B) =&gt; R
      * @return a new {@link MethodWrapper MethodWrapper}
      *
      * @since 1.3.2
@@ -75,6 +76,7 @@ public class FWrapper extends PerExecLanguageLibrary<Context> implements IFWrapp
     /**
      * @param c
      *
+     * @custom.replaceParams c: (arg0?: A, arg1?: B) =&gt; R
      * @return a new {@link MethodWrapper MethodWrapper}
      *
      * @since 1.3.2

@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
-import xyz.wagyourtail.Pair;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.access.CustomClickEvent;
 import xyz.wagyourtail.jsmacros.client.access.IChatHud;
@@ -21,10 +20,7 @@ import xyz.wagyourtail.jsmacros.core.event.IEventListener;
 import xyz.wagyourtail.jsmacros.core.event.impl.EventCustom;
 import xyz.wagyourtail.jsmacros.core.language.BaseWrappedException;
 import xyz.wagyourtail.jsmacros.core.language.ContextContainer;
-import xyz.wagyourtail.jsmacros.core.language.ScriptContext;
 import xyz.wagyourtail.jsmacros.core.library.impl.FJsMacros;
-
-import java.util.concurrent.Semaphore;
 
 public class Profile extends BaseProfile {
     

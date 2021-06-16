@@ -28,6 +28,10 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
         return Language.getInstance().reorder(textRenderer.trimToWidth(str,width));
     }
     
+    public void setParent(Screen parent) {
+        this.parent = parent;
+    }
+    
     public void reload() {
         init();
     }
