@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.api.classes;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.DrawableHelper;
@@ -48,7 +48,7 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
      */
     @Override
     public int getWidth() {
-        return mc.getWindow().getScaledWidth();
+        return mc.window.getScaledWidth();
     }
 
     /**
@@ -57,7 +57,7 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
      */
     @Override
     public int getHeight() {
-        return mc.getWindow().getScaledHeight();
+        return mc.window.getScaledHeight();
     }
 
     /**
@@ -432,14 +432,14 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
 
     @Override
     public void render() {
-        RenderSystem.pushMatrix();
+        GlStateManager.pushMatrix();
         synchronized (elements) {
             Iterator<RenderCommon.RenderElement> iter = elements.stream().sorted(Comparator.comparingInt(RenderCommon.RenderElement::getZIndex)).iterator();
             while (iter.hasNext()) {
                 iter.next().render(0, 0, 0);
             }
         }
-        RenderSystem.popMatrix();
+        GlStateManager.popMatrix();
     }
 
     /**

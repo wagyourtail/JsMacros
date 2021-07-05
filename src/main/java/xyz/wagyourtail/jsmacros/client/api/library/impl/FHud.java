@@ -240,7 +240,7 @@ public class FHud extends BaseLibrary {
      * @return the current X coordinate of the mouse
      */
     public double getMouseX() {
-        return mc.mouse.getX() * (double)mc.getWindow().getScaledWidth() / (double)mc.getWindow().getWidth();
+        return mc.mouse.getX() * (double)mc.window.getScaledWidth() / (double)mc.window.getWidth();
     }
     
     /**
@@ -249,6 +249,6 @@ public class FHud extends BaseLibrary {
      * @return the current Y coordinate of the mouse
      */
     public double getMouseY() {
-        return mc.mouse.getY() * (double)mc.getWindow().getScaledHeight() / (double)mc.getWindow().getHeight();
+        return mc.mouse.getY() * (double)mc.window.getScaledHeight() / (double)mc.window.getHeight();
     }
 }

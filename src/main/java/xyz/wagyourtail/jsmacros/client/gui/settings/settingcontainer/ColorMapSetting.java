@@ -1,7 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.settings.settingcontainer;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import xyz.wagyourtail.jsmacros.client.gui.elements.AnnotatedCheckBox;

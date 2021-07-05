@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.mixins.access;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.hud.InGameHud;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,8 +22,8 @@ class MixinInGameHud {
                 } catch (Exception ignored) {}
             }
         }
-
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.enableAlphaTest();
+    
+        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableAlphaTest();
     }
 }

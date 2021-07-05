@@ -134,10 +134,10 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, MethodWrapper<TextHelper, Object, Object> callback) {
         assert folder != null;
-        ScreenshotUtils.saveScreenshot(new File(Core.instance.config.macroFolder, folder), mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(),
-                mc.getFramebuffer(), (text) -> {
-                    if (callback != null) callback.accept(new TextHelper(text));
-                });
+        ScreenshotUtils.method_1659(new File(Core.instance.config.macroFolder, folder), mc.window.getFramebufferWidth(), mc.window.getFramebufferHeight(),
+            mc.getFramebuffer(), (text) -> {
+                if (callback != null) callback.accept(new TextHelper(text));
+            });
     }
 
     /**
@@ -152,10 +152,10 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, String file, MethodWrapper<TextHelper, Object, Object> callback) {
         assert folder != null && file != null;
-        ScreenshotUtils.saveScreenshot(new File(Core.instance.config.macroFolder, folder), file, mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(),
-                mc.getFramebuffer(), (text) -> {
-                    if (callback != null) callback.accept(new TextHelper(text));
-                });
+        ScreenshotUtils.method_1662(new File(Core.instance.config.macroFolder, folder), file, mc.window.getFramebufferWidth(), mc.window.getFramebufferHeight(),
+            mc.getFramebuffer(), (text) -> {
+                if (callback != null) callback.accept(new TextHelper(text));
+            });
     }
 
     /**

@@ -89,7 +89,7 @@ public class Inventory<T extends ContainerScreen<?>> {
      */
     public Inventory<T> click(int slot, int mousebutton) {
         SlotActionType act = mousebutton == 2 ? SlotActionType.CLONE : SlotActionType.PICKUP;
-        man.clickSlot(syncId, slot, mousebutton, act, player);
+        man.method_2906(syncId, slot, mousebutton, act, player);
         return this;
     }
 
@@ -102,11 +102,11 @@ public class Inventory<T extends ContainerScreen<?>> {
      */
     public Inventory<T> dragClick(int[] slots, int mousebutton) {
         mousebutton = mousebutton == 0 ? 1 : 5;
-        man.clickSlot(syncId, -999, mousebutton - 1, SlotActionType.QUICK_CRAFT, player); // start drag click
+        man.method_2906(syncId, -999, mousebutton - 1, SlotActionType.QUICK_CRAFT, player); // start drag click
         for (int i : slots) {
-            man.clickSlot(syncId, i, mousebutton, SlotActionType.QUICK_CRAFT, player);
+            man.method_2906(syncId, i, mousebutton, SlotActionType.QUICK_CRAFT, player);
         }
-        man.clickSlot(syncId, -999, mousebutton + 1, SlotActionType.QUICK_CRAFT, player);
+        man.method_2906(syncId, -999, mousebutton + 1, SlotActionType.QUICK_CRAFT, player);
         return this;
     }
 
@@ -115,7 +115,7 @@ public class Inventory<T extends ContainerScreen<?>> {
      * @param slot
      */
     public Inventory<T> dropSlot(int slot) {
-        man.clickSlot(syncId, slot, 0, SlotActionType.THROW, player);
+        man.method_2906(syncId, slot, 0, SlotActionType.THROW, player);
         return this;
     }
     
@@ -145,7 +145,7 @@ public class Inventory<T extends ContainerScreen<?>> {
      */
     public Inventory<T> closeAndDrop() {
         ItemStack held = player.inventory.getCursorStack();
-        if (!held.isEmpty()) man.clickSlot(syncId, -999, 0, SlotActionType.PICKUP, player);
+        if (!held.isEmpty()) man.method_2906(syncId, -999, 0, SlotActionType.PICKUP, player);
         mc.execute(player::closeContainer);
         this.inventory = null;
         return this;
@@ -166,7 +166,7 @@ public class Inventory<T extends ContainerScreen<?>> {
      * @return
      */
     public Inventory<T> quick(int slot) {
-        man.clickSlot(syncId, slot, 0, SlotActionType.QUICK_MOVE, player);
+        man.method_2906(syncId, slot, 0, SlotActionType.QUICK_MOVE, player);
         return this;
     }
 
@@ -204,8 +204,8 @@ public class Inventory<T extends ContainerScreen<?>> {
     public Inventory<T> split(int slot1, int slot2) throws Exception {
         if (slot1 == slot2) throw new Exception("must be 2 different slots.");
         if (!getSlot(slot1).isEmpty() || !getSlot(slot2).isEmpty()) throw new Exception("slots must be empty.");
-        man.clickSlot(syncId, slot1, 1, SlotActionType.PICKUP, player);
-        man.clickSlot(syncId, slot2, 0, SlotActionType.PICKUP, player);
+        man.method_2906(syncId, slot1, 1, SlotActionType.PICKUP, player);
+        man.method_2906(syncId, slot2, 0, SlotActionType.PICKUP, player);
         return this;
     }
 
@@ -216,8 +216,8 @@ public class Inventory<T extends ContainerScreen<?>> {
      * @return
      */
     public Inventory<T> grabAll(int slot) {
-        man.clickSlot(syncId, slot, 0, SlotActionType.PICKUP, player);
-        man.clickSlot(syncId, slot, 0, SlotActionType.PICKUP_ALL, player);
+        man.method_2906(syncId, slot, 0, SlotActionType.PICKUP, player);
+        man.method_2906(syncId, slot, 0, SlotActionType.PICKUP_ALL, player);
         return this;
     }
 
@@ -232,9 +232,9 @@ public class Inventory<T extends ContainerScreen<?>> {
         boolean is1 = getSlot(slot1).isEmpty();
         boolean is2 = getSlot(slot2).isEmpty();
         if (is1 && is2) return this;
-        if (!is1) man.clickSlot(syncId, slot1, 0, SlotActionType.PICKUP, player);
-        man.clickSlot(syncId, slot2, 0, SlotActionType.PICKUP, player);
-        if (!is2) man.clickSlot(syncId, slot1, 0, SlotActionType.PICKUP, player);
+        if (!is1) man.method_2906(syncId, slot1, 0, SlotActionType.PICKUP, player);
+        man.method_2906(syncId, slot2, 0, SlotActionType.PICKUP, player);
+        if (!is2) man.method_2906(syncId, slot1, 0, SlotActionType.PICKUP, player);
         return this;
     }
     
@@ -253,8 +253,8 @@ public class Inventory<T extends ContainerScreen<?>> {
      */
     public int getSlotUnderMouse() {
         MinecraftClient mc = MinecraftClient.getInstance();
-        double x = mc.mouse.getX() * (double)mc.getWindow().getScaledWidth() / (double)mc.getWindow().getWidth();
-        double y = mc.mouse.getY() * (double)mc.getWindow().getScaledHeight() / (double)mc.getWindow().getHeight();
+        double x = mc.mouse.getX() * (double)mc.window.getScaledWidth() / (double)mc.window.getWidth();
+        double y = mc.mouse.getY() * (double)mc.window.getScaledHeight() / (double)mc.window.getHeight();
         if (this.inventory != mc.currentScreen) throw new RuntimeException("Inventory screen is not open.");
         Slot s = ((IInventory)this.inventory).jsmacros_getSlotUnder(x, y);
         if (s == null) return -999;
@@ -332,7 +332,7 @@ public class Inventory<T extends ContainerScreen<?>> {
     private Map<String, int[]> getMapInternal() {
         Map<String, int[]> map = new HashMap<>();
         int slots = getTotalSlots();
-        if (this.inventory instanceof InventoryScreen || (this.inventory instanceof CreativeInventoryScreen && ((CreativeInventoryScreen) this.inventory).getSelectedTab() == ItemGroup.INVENTORY.getIndex())) {
+        if (this.inventory instanceof InventoryScreen || (this.inventory instanceof CreativeInventoryScreen && ((CreativeInventoryScreen) this.inventory).method_2469() == ItemGroup.INVENTORY.getIndex())) {
             if (this.inventory instanceof  CreativeInventoryScreen) {
                 map.put("delete", new int[] {--slots});
             } 

@@ -105,7 +105,7 @@ public class FKeyBind extends BaseLibrary {
         for (KeyBinding key : mc.options.keysAll) {
             if (key.getName().equals(keyBind)) {
                 if (keyState) KeyBinding.onKeyPressed(InputUtil.fromName(key.getName()));
-                key.setPressed(keyState);
+                KeyBinding.setKeyPressed(InputUtil.fromName(key.getName()), keyState);
                 return;
             }
         }
@@ -119,7 +119,7 @@ public class FKeyBind extends BaseLibrary {
      */
     protected void key(KeyBinding keyBind, boolean keyState) {
         if (keyState) KeyBinding.onKeyPressed(InputUtil.fromName(keyBind.getName()));
-        keyBind.setPressed(keyState);
+        KeyBinding.setKeyPressed(InputUtil.fromName(keyBind.getName()), keyState);
     }
     
     /**

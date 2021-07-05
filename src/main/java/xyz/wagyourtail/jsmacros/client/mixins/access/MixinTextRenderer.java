@@ -1,8 +1,9 @@
 package xyz.wagyourtail.jsmacros.client.mixins.access;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.Matrix4f;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,54 +17,54 @@ import java.util.List;
 @Mixin(TextRenderer.class)
 public class MixinTextRenderer {
     
+    @Unique float j;
     @Unique float k;
     @Unique float l;
-    @Unique float m;
     @Unique boolean wasCustomColor = false;
     
     @Inject(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
-    public void addCustomColors(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light, CallbackInfoReturnable<Float> cir, float f, float g, float h, float i, float j, float k, float l, float m, float n, boolean bl, boolean bl2, boolean bl3, boolean bl4, boolean bl5, List list, int o, char c) {
-        if (text.charAt(o+1) == '#') {
+    public void addCustomColors(String text, float x, float y, int color, boolean shadow, CallbackInfoReturnable<Float> cir, float f, float g, float h, float i, float j, float k, float l, float m, Tessellator tessellator, BufferBuilder bufferBuilder, Identifier identifier, boolean bl, boolean bl2, boolean bl3, boolean bl4, boolean bl5, List list, int n, char c) {
+        if (text.charAt(n+1) == '#') {
             try {
-                int col = Integer.parseInt(text.substring(o + 2, o + 8), 16);
-                this.k = (col >> 16 & 255) / 255F * f;
-                this.l = (col >> 8 & 255) / 255F * f;
-                this.m = (col & 255) / 255F * f;
+                int col = Integer.parseInt(text.substring(n + 2, n + 8), 16);
+                this.j = (col >> 16 & 255) / 255F * f;
+                this.k = (col >> 8 & 255) / 255F * f;
+                this.l = (col & 255) / 255F * f;
                 this.wasCustomColor = true;
             } catch (NumberFormatException ignored) {
+                this.j = j;
                 this.k = k;
                 this.l = l;
-                this.m = m;
             }
         } else {
+            this.j = j;
             this.k = k;
             this.l = l;
-            this.m = m;
         }
     }
     
-    @ModifyVariable(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1, shift = At.Shift.AFTER), ordinal = 7)
+    @ModifyVariable(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1, shift = At.Shift.AFTER), ordinal = 6)
     public float modifyR(float red) {
+        return j;
+    }
+    
+    @ModifyVariable(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1, shift = At.Shift.AFTER), ordinal = 7)
+    public float modifyG(float green) {
         return k;
     }
     
     @ModifyVariable(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1, shift = At.Shift.AFTER), ordinal = 8)
-    public float modifyG(float green) {
+    public float modifyB(float blue) {
         return l;
     }
     
-    @ModifyVariable(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1, shift = At.Shift.AFTER), ordinal = 9)
-    public float modifyB(float blue) {
-        return m;
-    }
-    
-    @ModifyVariable(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1, shift = At.Shift.AFTER), ordinal = 3)
-    public int modifyIndex(int o) {
+    @ModifyVariable(method = "drawLayer", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 1, shift = At.Shift.AFTER), ordinal = 1)
+    public int modifyIndex(int n) {
         if (wasCustomColor) {
             wasCustomColor = false;
-            return o + 6;
+            return n + 6;
         } else {
-            return o;
+            return n;
         }
     }
     

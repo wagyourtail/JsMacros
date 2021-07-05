@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.sharedclasses;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.DrawableHelper;
@@ -147,19 +147,19 @@ public class RenderCommon {
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            RenderSystem.scaled(scale, scale, 1);
-            RenderSystem.translated(x, y, 0);
-            RenderSystem.rotatef(rotation, 0, 0, 1);
-            RenderSystem.translated(-x, -y, 0);
+            GlStateManager.scaled(scale, scale, 1);
+            GlStateManager.translated(x, y, 0);
+            GlStateManager.rotatef(rotation, 0, 0, 1);
+            GlStateManager.translated(-x, -y, 0);
             if (item != null) {
                 ItemRenderer i = mc.getItemRenderer();
                 i.renderGuiItemIcon(item,(int) (x / scale), (int) (y / scale));
                 if (overlay) i.renderGuiItemOverlay(mc.textRenderer, item, (int) (x / scale), (int) (y / scale), ovText);
             }
-            RenderSystem.translated(x, y, 0);
-            RenderSystem.rotatef(-rotation, 0, 0, 1);
-            RenderSystem.translated(-x, -y, 0);
-            RenderSystem.scaled(1 / scale, 1 / scale, 1);
+            GlStateManager.translated(x, y, 0);
+            GlStateManager.rotatef(-rotation, 0, 0, 1);
+            GlStateManager.translated(-x, -y, 0);
+            GlStateManager.scaled(1 / scale, 1 / scale, 1);
         }
     
         @Override
@@ -258,16 +258,16 @@ public class RenderCommon {
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            RenderSystem.translated(x, y, 0);
-            RenderSystem.rotatef(rotation, 0, 0, 1);
-            RenderSystem.translated(-x, -y, 0);
+            GlStateManager.translated(x, y, 0);
+            GlStateManager.rotatef(rotation, 0, 0, 1);
+            GlStateManager.translated(-x, -y, 0);
             mc.getTextureManager().bindTexture(imageid);
-            RenderSystem.enableBlend();
+            GlStateManager.enableBlend();
             DrawableHelper.blit(x, y, width, height, imageX, imageY, regionWidth, regionHeight, textureWidth, textureHeight);
-            RenderSystem.disableBlend();
-            RenderSystem.translated(-x, -y, 0);
-            RenderSystem.rotatef(-rotation, 0, 0, 1);
-            RenderSystem.translated(x, y, 0);
+            GlStateManager.disableBlend();
+            GlStateManager.translated(-x, -y, 0);
+            GlStateManager.rotatef(-rotation, 0, 0, 1);
+            GlStateManager.translated(x, y, 0);
         }
     
         @Override
@@ -364,13 +364,13 @@ public class RenderCommon {
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            RenderSystem.translated(x1, y1, 0);
-            RenderSystem.rotatef(rotation, 0, 0, 1);
-            RenderSystem.translated(-x1, -y1, 0);
+            GlStateManager.translated(x1, y1, 0);
+            GlStateManager.rotatef(rotation, 0, 0, 1);
+            GlStateManager.translated(-x1, -y1, 0);
             DrawableHelper.fill(x1, y1, x2, y2, color);
-            RenderSystem.translated(x1, y1, 0);
-            RenderSystem.rotatef(-rotation, 0, 0, 1);
-            RenderSystem.translated(-x1, -y1, 0);
+            GlStateManager.translated(x1, y1, 0);
+            GlStateManager.rotatef(-rotation, 0, 0, 1);
+            GlStateManager.translated(-x1, -y1, 0);
         }
     
         @Override
@@ -493,16 +493,16 @@ public class RenderCommon {
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            RenderSystem.scaled(scale, scale, 1);
-            RenderSystem.translated(x, y, 0);
-            RenderSystem.rotatef(rotation, 0, 0, 1);
-            RenderSystem.translated(-x, -y, 0);
+            GlStateManager.scaled(scale, scale, 1);
+            GlStateManager.translated(x, y, 0);
+            GlStateManager.rotatef(rotation, 0, 0, 1);
+            GlStateManager.translated(-x, -y, 0);
             if (shadow) mc.textRenderer.drawWithShadow(text.asFormattedString(), (int)(x / scale), (int)(y / scale), color);
             else mc.textRenderer.draw(text.asFormattedString(), (int)(x / scale), (int)(y / scale), color);
-            RenderSystem.translated(x, y, 0);
-            RenderSystem.rotatef(-rotation, 0, 0, 1);
-            RenderSystem.translated(-x, -y, 0);
-            RenderSystem.scaled(1 / scale, 1 / scale, 1);
+            GlStateManager.translated(x, y, 0);
+            GlStateManager.rotatef(-rotation, 0, 0, 1);
+            GlStateManager.translated(-x, -y, 0);
+            GlStateManager.scaled(1 / scale, 1 / scale, 1);
         }
     
         @Override

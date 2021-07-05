@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.containers;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.LiteralText;
@@ -166,9 +166,9 @@ public class MacroContainer extends MultiElementContainer<MacroScreen> {
                     this.mc.getTextureManager().bindTexture(key_both_tex);
                     break;
                 }
-                RenderSystem.enableBlend();
+                GlStateManager.enableBlend();
                 blit(x + w / 4 - height + 2, y + 2, height-4, height-4, 0, 0, 32, 32, 32, 32);
-                RenderSystem.disableBlend();
+                GlStateManager.disableBlend();
             }
             
             // border

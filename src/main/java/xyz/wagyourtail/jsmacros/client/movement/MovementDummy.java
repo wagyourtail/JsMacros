@@ -44,7 +44,9 @@ public class MovementDummy extends LivingEntity {
 
     public MovementDummy(World world, Vec3d pos, Vec3d velocity, Box hitBox, boolean onGround, boolean isSprinting, boolean isSneaking) {
         super(EntityType.PLAYER, world);
-        this.setPos(pos.getX(), pos.getY(), pos.getZ());
+        this.x = pos.getX();
+        this.y = pos.getY();
+        this.z = pos.getZ();
         this.setVelocity(velocity);
         this.setBoundingBox(hitBox);
         this.setSprinting(isSprinting);
@@ -87,7 +89,7 @@ public class MovementDummy extends LivingEntity {
         this.setVelocity(velX, velY, velZ);
 
         /** Sneaking start **/
-        if (this.isSneaking() && this.wouldPoseNotCollide(EntityPose.CROUCHING)) {
+        if (this.isSneaking() && this.wouldPoseNotCollide(EntityPose.SNEAKING)) {
             // Yeah this looks dumb, but that is the way minecraft does it
             currentInput.movementSideways = (float) ((double) currentInput.movementSideways * 0.3D);
             currentInput.movementForward = (float) ((double) currentInput.movementForward * 0.3D);
@@ -124,7 +126,7 @@ public class MovementDummy extends LivingEntity {
         this.travel(new Vec3d(currentInput.movementSideways * 0.98, 0.0, currentInput.movementForward * 0.98));
 
         /* flyingSpeed only gets set after travel */
-        this.flyingSpeed = this.isSprinting() ? 0.026F : 0.02F;
+//        this.flyingSpeed = this.isSprinting() ? 0.026F : 0.02F;
 
         return this.getPos();
     }
@@ -136,7 +138,7 @@ public class MovementDummy extends LivingEntity {
      */
     @Override
     public void move(MovementType mt, Vec3d velocity) {
-        if (this.isClimbing() && velocity.getY() < 0.0D && this.getBlockState().getBlock() != Blocks.SCAFFOLDING && this.isHoldingOntoLadder()) {
+        if (this.isClimbing() && velocity.getY() < 0.0D && this.method_16212().getBlock() != Blocks.SCAFFOLDING && this.isSneaking()) {
             this.setVelocity(velocity.getX(), 0, velocity.getZ());
         }
         super.move(mt, this.getVelocity());

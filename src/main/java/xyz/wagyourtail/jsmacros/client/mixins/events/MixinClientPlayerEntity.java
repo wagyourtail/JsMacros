@@ -8,6 +8,8 @@ import net.minecraft.client.input.Input;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
@@ -54,8 +56,8 @@ abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity {
         if (air % 20 == 0) new EventAirChange(air);
         super.setAir(air);
     }
-
-    @Inject(at = @At("HEAD"), method = "setExperience")
+    
+    @Inject(at = @At("HEAD"), method="method_3145")
     public void onSetExperience(float progress, int total, int level, CallbackInfo info) {
         new EventEXPChange(progress, total, level);
     }
@@ -112,7 +114,7 @@ abstract class MixinClientPlayerEntity extends AbstractClientPlayerEntity {
         this.input.movementSideways = moveInput.movementSideways;
         this.input.jumping = moveInput.jumping;
         this.input.sneaking = moveInput.sneaking;
-        this.client.options.keySprint.setPressed(moveInput.sprinting);
+        KeyBinding.setKeyPressed(InputUtil.fromName(this.client.options.keySprint.getName()), moveInput.sprinting);
         this.yaw = moveInput.yaw;
         this.pitch = moveInput.pitch;
 

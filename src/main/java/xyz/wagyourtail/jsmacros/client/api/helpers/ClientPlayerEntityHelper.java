@@ -57,7 +57,7 @@ public class ClientPlayerEntityHelper<T extends ClientPlayerEntity> extends Play
      * @since 1.2.8
      */
     public ClientPlayerEntityHelper<T> lookAt(double x, double y, double z) {
-        PositionCommon.Vec3D vec = new PositionCommon.Vec3D(base.getX(), base.getY() + base.getEyeHeight(base.getPose()), base.getZ(), x, y, z);
+        PositionCommon.Vec3D vec = new PositionCommon.Vec3D(base.x, base.y + base.getEyeHeight(base.getPose()), base.z, x, y, z);
         lookAt(vec.getYaw(), vec.getPitch());
         return this;
     }
@@ -99,7 +99,7 @@ public class ClientPlayerEntityHelper<T extends ClientPlayerEntity> extends Play
         Hand hand = offHand ? Hand.OFF_HAND : Hand.MAIN_HAND;
         ActionResult result = mc.interactionManager.interactEntity(mc.player, entity.getRaw(), hand);
         assert mc.player != null;
-        if (result.isAccepted())
+        if (result != ActionResult.FAIL)
             mc.player.swingHand(hand);
     }
 
@@ -112,7 +112,7 @@ public class ClientPlayerEntityHelper<T extends ClientPlayerEntity> extends Play
         Hand hand = offHand ? Hand.OFF_HAND : Hand.MAIN_HAND;
         ActionResult result = mc.interactionManager.interactItem(mc.player, mc.world, hand);
         assert mc.player != null;
-        if (result.isAccepted())
+        if (result != ActionResult.FAIL)
             mc.player.swingHand(hand);
     }
 
@@ -131,7 +131,7 @@ public class ClientPlayerEntityHelper<T extends ClientPlayerEntity> extends Play
             new BlockHitResult(Vec3d.ZERO, Direction.values()[direction], new BlockPos(x, y, z), false)
         );
         assert mc.player != null;
-        if (result.isAccepted())
+        if (result != ActionResult.FAIL)
             mc.player.swingHand(hand);
     }
 
