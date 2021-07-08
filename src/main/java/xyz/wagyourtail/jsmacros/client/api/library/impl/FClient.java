@@ -1,11 +1,11 @@
 package xyz.wagyourtail.jsmacros.client.api.library.impl;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConnectScreen;
-import net.minecraft.network.ServerAddress;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.GuiConnecting;
+import net.minecraft.client.multiplayer.ServerAddress;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
-import xyz.wagyourtail.jsmacros.client.config.Profile;
 import xyz.wagyourtail.jsmacros.client.api.helpers.OptionsHelper;
+import xyz.wagyourtail.jsmacros.client.config.Profile;
 import xyz.wagyourtail.jsmacros.client.tick.TickSync;
 import xyz.wagyourtail.jsmacros.core.Core;
 import xyz.wagyourtail.jsmacros.core.MethodWrapper;
@@ -23,7 +23,7 @@ import xyz.wagyourtail.jsmacros.core.library.Library;
 @Library("Client")
 @SuppressWarnings("unused")
 public class FClient extends BaseLibrary {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getMinecraft();
     /**
      * Don't touch this plz xd.
      */
@@ -34,7 +34,7 @@ public class FClient extends BaseLibrary {
     * @since 1.0.0 (was in the {@code jsmacros} library until 1.2.9)
      * @return the raw minecraft client class, it may be useful to use <a target="_blank" href="https://wagyourtail.xyz/Projects/Minecraft%20Mappings%20Viewer/App">Minecraft Mappings Viewer</a> for this.
      */
-    public MinecraftClient getMinecraft() {
+    public Minecraft getMinecraft() {
         return mc;
     }
 
@@ -44,7 +44,7 @@ public class FClient extends BaseLibrary {
      * @since 1.4.0
      */
     public void runOnMainThread(MethodWrapper<Object, Object, Object> runnable) {
-        mc.execute(runnable);
+        mc.addScheduledTask(runnable);
     }
 
     /**
@@ -55,7 +55,7 @@ public class FClient extends BaseLibrary {
      * @return an {@link xyz.wagyourtail.jsmacros.client.api.helpers.OptionsHelper OptionsHelper} for the game options.
      */
     public OptionsHelper getGameOptions() {
-        return new OptionsHelper(mc.options);
+        return new OptionsHelper(mc.gameSettings);
     }
     
     /**
@@ -64,7 +64,7 @@ public class FClient extends BaseLibrary {
      * @since 1.1.2 (was in the {@code jsmacros} library until 1.2.9)
      */
     public String mcVersion() {
-        return mc.getGameVersion();
+        return mc.getVersion();
     }
     
     /**
@@ -74,7 +74,7 @@ public class FClient extends BaseLibrary {
      *
      */
     public String getFPS() {
-        return mc.fpsDebugString;
+        return mc.debug;
     }
     
     /**
@@ -85,8 +85,8 @@ public class FClient extends BaseLibrary {
      * @param ip
      */
     public void connect(String ip) {
-        ServerAddress a = ServerAddress.parse(ip);
-        connect(a.getAddress(), a.getPort());
+        ServerAddress a = ServerAddress.fromString(ip);
+        connect(a.getIP(), a.getPort());
     }
     
     /**
@@ -98,10 +98,10 @@ public class FClient extends BaseLibrary {
      * @param port
      */
     public void connect(String ip, int port) {
-        mc.execute(() -> {
-            if (mc.world != null) mc.world.disconnect();
-            mc.joinWorld(null);
-            mc.openScreen(new ConnectScreen(null, mc, ip, port));
+        mc.addScheduledTask(() -> {
+            if (mc.theWorld != null) mc.theWorld.sendQuittingDisconnectingPacket();
+            mc.loadWorld(null);
+            mc.displayGuiScreen(new GuiConnecting(null, mc, ip, port));
         });
     }
     
@@ -124,9 +124,9 @@ public class FClient extends BaseLibrary {
      * @param callback calls your method as a {@link java.util.function.Consumer Consumer}&lt;{@link java.lang.Boolean Boolean}&gt;
      */
     public void disconnect(MethodWrapper<Boolean, Object, Object> callback) {
-        mc.execute(() -> {
-            boolean isWorld = mc.world != null;
-            if (isWorld) mc.world.disconnect();
+        mc.addScheduledTask(() -> {
+            boolean isWorld = mc.theWorld != null;
+            if (isWorld) mc.theWorld.sendQuittingDisconnectingPacket();
             if (callback != null) callback.accept(isWorld);
         });
     }
@@ -139,7 +139,7 @@ public class FClient extends BaseLibrary {
      * @throws InterruptedException
      */
     public void waitTick() throws InterruptedException {
-        if (mc.isOnThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread())) {
+        if (mc.isCallingFromMinecraftThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread())) {
             throw new IllegalThreadStateException("Attempted to wait on a thread that is currently joined!");
         }
         tickSynchronizer.waitTick();
@@ -154,7 +154,7 @@ public class FClient extends BaseLibrary {
      * @throws InterruptedException
      */
     public void waitTick(int i) throws InterruptedException {
-        if (mc.isOnThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread())) {
+        if (mc.isCallingFromMinecraftThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread())) {
             throw new IllegalThreadStateException("Attempted to wait on a thread that is currently joined!");
         }
         while (--i >= 0) {

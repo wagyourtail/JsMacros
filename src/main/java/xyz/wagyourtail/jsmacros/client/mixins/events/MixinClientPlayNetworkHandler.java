@@ -1,18 +1,15 @@
 package xyz.wagyourtail.jsmacros.client.mixins.events;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.hud.ClientBossBar;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Entry;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.*;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,7 +17,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import xyz.wagyourtail.jsmacros.client.access.IBossBarHud;
 import xyz.wagyourtail.jsmacros.client.api.event.impl.*;
 
 import java.util.HashSet;
@@ -28,47 +24,46 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Mixin(ClientPlayNetworkHandler.class)
+@Mixin(NetHandlerPlayClient.class)
 class MixinClientPlayNetworkHandler {
     
     @Shadow
-    private MinecraftClient client;
+    private Minecraft gameController;
     @Shadow
-    private ClientWorld world;
-    @Shadow
-    @Final
-    private ClientConnection connection;
+    private WorldClient clientWorldController;
     
     @Shadow
     @Final
-    private Map<UUID, PlayerListEntry> playerListEntries;
+    private Map<UUID, NetworkPlayerInfo> playerInfoMap;
     
     
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"), method="onCombatEvent", cancellable = true)
-    private void onDeath(final CombatEventS2CPacket packet, CallbackInfo info) {
+    @Shadow @Final private NetworkManager netManager;
+    
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/stream/MetadataPlayerDeath;func_152807_a(Ljava/lang/String;)V"), method="handleCombatEvent", cancellable = true)
+    private void onDeath(final S42PacketCombatEvent packet, CallbackInfo info) {
         new EventDeath();
     }
     
     @Unique
     private final Set<UUID> newPlayerEntries = new HashSet<>();
     
-    @Inject(at = @At("HEAD"), method = "onPlayerList")
-    public void onPlayerList(PlayerListS2CPacket packet, CallbackInfo info) {
-        if (this.client.isOnThread())
-            switch (packet.getAction()) {
+    @Inject(at = @At("HEAD"), method = "handlePlayerListItem")
+    public void onPlayerList(S38PacketPlayerListItem packet, CallbackInfo info) {
+        if (this.gameController.isCallingFromMinecraftThread())
+            switch (packet.func_179768_b()) {
                 case ADD_PLAYER:
-                    for (Entry e : packet.getEntries()) {
+                    for (S38PacketPlayerListItem.AddPlayerData e : packet.func_179767_a()) {
                         synchronized (newPlayerEntries) {
-                            if (playerListEntries.get(e.getProfile().getId()) == null) {
+                            if (playerInfoMap.get(e.getProfile().getId()) == null) {
                                 newPlayerEntries.add(e.getProfile().getId());
                             }
                         }
                     }
                     return;
                 case REMOVE_PLAYER:
-                    for (Entry e : packet.getEntries()) {
-                      if (playerListEntries.get(e.getProfile().getId()) != null) {
-                            PlayerListEntry p = playerListEntries.get(e.getProfile().getId());
+                    for (S38PacketPlayerListItem.AddPlayerData e : packet.func_179767_a()) {
+                      if (playerInfoMap.get(e.getProfile().getId()) != null) {
+                            NetworkPlayerInfo p = playerInfoMap.get(e.getProfile().getId());
                             new EventPlayerLeave(e.getProfile().getId(), p);
                       }
                     }
@@ -77,13 +72,13 @@ class MixinClientPlayNetworkHandler {
             }
     }
     
-    @Inject(at = @At("TAIL"), method = "onPlayerList")
-    public void onPlayerListEnd(PlayerListS2CPacket packet, CallbackInfo info) {
-        if (packet.getAction() == PlayerListS2CPacket.Action.ADD_PLAYER) {
-            for (Entry e : packet.getEntries()) {
+    @Inject(at = @At("TAIL"), method = "handlePlayerListItem")
+    public void onPlayerListEnd(S38PacketPlayerListItem packet, CallbackInfo info) {
+        if (packet.func_179768_b() == S38PacketPlayerListItem.Action.ADD_PLAYER) {
+            for (S38PacketPlayerListItem.AddPlayerData e : packet.func_179767_a()) {
                 synchronized (newPlayerEntries) {
                     if (newPlayerEntries.contains(e.getProfile().getId())) {
-                        new EventPlayerJoin(e.getProfile().getId(), playerListEntries.get(e.getProfile().getId()));
+                        new EventPlayerJoin(e.getProfile().getId(), playerInfoMap.get(e.getProfile().getId()));
                         newPlayerEntries.remove(e.getProfile().getId());
                     }
                 }
@@ -91,102 +86,74 @@ class MixinClientPlayNetworkHandler {
         }
     }
     
-    @Inject(at = @At("HEAD"), method = "onTitle")
-    public void onTitle(TitleS2CPacket packet, CallbackInfo info) {
+    @Inject(at = @At("HEAD"), method = "handleTitle")
+    public void onTitle(S45PacketTitle packet, CallbackInfo info) {
         String type = null;
-        switch(packet.getAction()) {
+        switch(packet.getType()) {
             case TITLE:
                 type = "TITLE";
                 break;
             case SUBTITLE:
                 type = "SUBTITLE";
                 break;
-            case ACTIONBAR:
-                type = "ACTIONBAR";
-                break;
             default:
                 break;
         }
-        if (type != null && packet.getText() != null) {
-            new EventTitle(type, packet.getText());
+        if (type != null && packet.getMessage() != null) {
+            new EventTitle(type, packet.getMessage());
         }
     }
     
-    @Inject(at = @At("TAIL"), method="onBossBar")
-    public void onBossBar(BossBarS2CPacket packet, CallbackInfo info) {
-        String type = null;
-        switch(packet.getType()) {
-        case ADD:
-            type = "ADD";
-            break;
-        case REMOVE:
-            type = "REMOVE";
-            break;
-        case UPDATE_NAME:
-            type = "UPDATE_NAME";
-            break;
-        case UPDATE_PCT:
-            type = "UPDATE_PERCENT";
-            break;
-        case UPDATE_PROPERTIES:
-            type = "UPDATE_PROPERTIES";
-            break;
-        case UPDATE_STYLE:
-            type = "UPDATE_STYLE";
-            break;
-        default:
-            break;
-        }
-        ClientBossBar bossBar = packet.getType() == BossBarS2CPacket.Type.REMOVE ? null :
-            ((IBossBarHud) client.inGameHud.getBossBarHud()).jsmacros_GetBossBars().get(packet.getUuid());
-        new EventBossbar(type, packet.getUuid(), bossBar);
-    }
-    
-
-    @Inject(at = @At(value="INVOKE", target="Lnet/minecraft/client/world/ClientWorld;playSound(DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FFZ)V"), method= "onItemPickupAnimation")
-    public void onItemPickupAnimation(ItemPickupAnimationS2CPacket packet, CallbackInfo info) {
-        assert client.world != null;
-        final Entity e = client.world.getEntityById(packet.getEntityId());
-        LivingEntity c = (LivingEntity)client.world.getEntityById(packet.getCollectorEntityId());
-        if (c == null) c = client.player;
+    @Inject(at = @At(value="INVOKE", target="Lnet/minecraft/client/multiplayer/WorldClient;playSoundAtEntity(Lnet/minecraft/entity/Entity;Ljava/lang/String;FF)V"), method= "handleCollectItem")
+    public void onItemPickupAnimation(S0DPacketCollectItem packet, CallbackInfo info) {
+        assert clientWorldController != null;
+        final Entity e = clientWorldController.getEntityByID(packet.getCollectedItemEntityID());
+        EntityLivingBase c = (EntityLivingBase)clientWorldController.getEntityByID(packet.getEntityID());
+        if (c == null) c = gameController.thePlayer;
         assert c != null;
-        if (c.equals(client.player) && e instanceof ItemEntity) {
-            ItemStack item = ((ItemEntity) e).getStack().copy();
-            item.setCount(packet.getStackAmount());
+        if (c.equals(gameController.thePlayer) && e instanceof EntityItem) {
+            ItemStack item = ((EntityItem) e).getEntityItem().copy();
+            item.stackSize = 1;
             new EventItemPickup(item);
         }
     }
     
-    @Inject(at = @At("TAIL"), method="onGameJoin")
-    public void onGameJoin(GameJoinS2CPacket packet, CallbackInfo info) {
-        new EventJoinServer(client.player, connection.getAddress().toString());
+    @Inject(at = @At("TAIL"), method="handleJoinGame")
+    public void onGameJoin(S01PacketJoinGame packet, CallbackInfo info) {
+        new EventJoinServer(gameController.thePlayer, netManager.getRemoteAddress().toString());
     }
     
-    @Inject(at = @At("TAIL"), method="onChunkData")
-    public void onChunkData(ChunkDataS2CPacket packet, CallbackInfo info) {
-        new EventChunkLoad(packet.getX(), packet.getZ(), packet.isFullChunk());
-    }
-    
-    @Inject(at = @At("TAIL"), method="onBlockUpdate")
-    public void onBlockUpdate(BlockUpdateS2CPacket packet, CallbackInfo info) {
-        new EventBlockUpdate(packet.getState(), world.getBlockEntity(packet.getPos()), packet.getPos(), "STATE");
-    }
-    
-    @Inject(at = @At("TAIL"), method="onChunkDeltaUpdate")
-    public void onChunkDeltaUpdate(ChunkDeltaUpdateS2CPacket packet, CallbackInfo info) {
-        for (ChunkDeltaUpdateS2CPacket.ChunkDeltaRecord record : packet.getRecords()) {
-            new EventBlockUpdate(record.getState(), world.getBlockEntity(record.getBlockPos()), record.getBlockPos(), "STATE");
+    @Inject(at = @At("RETURN"), method="handleChunkData")
+    public void onChunkData(S21PacketChunkData packet, CallbackInfo info) {
+        if (packet.getExtractedSize() == 0) {
+            new EventChunkUnload(packet.getChunkX(), packet.getChunkZ());
+        } else {
+            new EventChunkLoad(packet.getChunkX(), packet.getChunkZ(), packet.func_149274_i());
         }
     }
     
-    @Inject(at = @At("TAIL"), method="onBlockEntityUpdate")
-    public void onBlockEntityUpdate(BlockEntityUpdateS2CPacket packet, CallbackInfo info) {
-        new EventBlockUpdate(world.getBlockState(packet.getPos()), world.getBlockEntity(packet.getPos()), packet.getPos(), "ENTITY");
+    @Inject(at = @At("TAIL"), method = "handleMapChunkBulk")
+    public void onChunkDatas(S26PacketMapChunkBulk packet, CallbackInfo ci) {
+        for (int i = 0; i < packet.getChunkCount(); ++i) {
+            new EventChunkLoad(packet.getChunkX(i), packet.getChunkZ(i), true);
+        }
     }
     
-    @Inject(at = @At("TAIL"), method="onUnloadChunk")
-    public void onUnloadChunk(UnloadChunkS2CPacket packet, CallbackInfo info) {
-        new EventChunkUnload(packet.getX(), packet.getZ());
+    @Inject(at = @At("TAIL"), method="handleBlockChange")
+    public void onBlockUpdate(S23PacketBlockChange packet, CallbackInfo info) {
+        new EventBlockUpdate(packet.blockState, clientWorldController.getTileEntity(packet.getBlockPosition()), packet.getBlockPosition(), "STATE");
+    }
+    
+    @Inject(at = @At("TAIL"), method="handleMultiBlockChange")
+    public void onChunkDeltaUpdate(S22PacketMultiBlockChange packet, CallbackInfo info) {
+        for (S22PacketMultiBlockChange.BlockUpdateData record : packet.getChangedBlocks()) {
+            new EventBlockUpdate(record.getBlockState(), clientWorldController.getTileEntity(record.getPos()), record.getPos(), "STATE");
+        }
+    }
+    
+    @Inject(at = @At("TAIL"), method="handleUpdateTileEntity")
+    public void onBlockEntityUpdate(S35PacketUpdateTileEntity packet, CallbackInfo info) {
+        new EventBlockUpdate(clientWorldController.getBlockState(packet.getPos()), clientWorldController.getTileEntity(packet.getPos()), packet.getPos(), "ENTITY");
     }
 }
 

@@ -1,15 +1,14 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.potion.PotionEffect;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused")
-public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> {
+public class    LivingEntityHelper<T extends EntityLivingBase> extends EntityHelper<T> {
 
     public LivingEntityHelper(T e) {
         super(e);
@@ -21,7 +20,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      */
     public List<StatusEffectHelper> getStatusEffects() {
         List<StatusEffectHelper> l = new ArrayList<>();
-        for (StatusEffectInstance i : ImmutableList.copyOf(base.getStatusEffects())) {
+        for (PotionEffect i : ImmutableList.copyOf(base.getActivePotionEffects())) {
             l.add(new StatusEffectHelper(i));
         }
         return l;
@@ -33,7 +32,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return the item in the entity's main hand.
      */
     public ItemStackHelper getMainHand() {
-        return new ItemStackHelper(base.getEquippedStack(EquipmentSlot.MAINHAND));
+        return new ItemStackHelper(base.getHeldItem());
     }
     
     /**
@@ -41,7 +40,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return the item in the entity's off hand.
      */
     public ItemStackHelper getOffHand() {
-        return new ItemStackHelper(base.getEquippedStack(EquipmentSlot.OFFHAND));
+        return null;
     }
     
     /**
@@ -49,7 +48,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return the item in the entity's head armor slot.
      */
     public ItemStackHelper getHeadArmor() {
-        return new ItemStackHelper(base.getEquippedStack(EquipmentSlot.HEAD));
+        return new ItemStackHelper(base.getCurrentArmor(0));
     }
     
     /**
@@ -57,7 +56,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return the item in the entity's chest armor slot.
      */
     public ItemStackHelper getChestArmor() {
-        return new ItemStackHelper(base.getEquippedStack(EquipmentSlot.CHEST));
+        return new ItemStackHelper(base.getCurrentArmor(1));
     }
     
     /**
@@ -65,7 +64,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return the item in the entity's leg armor slot.
      */
     public ItemStackHelper getLegArmor() {
-        return new ItemStackHelper(base.getEquippedStack(EquipmentSlot.LEGS));
+        return new ItemStackHelper(base.getCurrentArmor(2));
     }
     
     /**
@@ -73,7 +72,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return the item in the entity's foot armor slot.
      */
     public ItemStackHelper getFootArmor() {
-        return new ItemStackHelper(base.getEquippedStack(EquipmentSlot.FEET));
+        return new ItemStackHelper(base.getCurrentArmor(3));
     }
     
     /**
@@ -89,7 +88,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return if the entity is in a bed.
      */
     public boolean isSleeping() {
-        return base.isSleeping();
+        return base.isPlayerSleeping();
     }
 
     /**
@@ -97,7 +96,7 @@ public class LivingEntityHelper<T extends LivingEntity> extends EntityHelper<T> 
      * @return if the entity has elytra deployed
      */
     public boolean isFallFlying() {
-        return base.isFallFlying();
+        return false;
     }
     
 }

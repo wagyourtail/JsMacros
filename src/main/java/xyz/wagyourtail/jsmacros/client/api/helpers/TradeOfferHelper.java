@@ -1,8 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
-import net.minecraft.village.TradeOffer;
+import net.minecraft.village.MerchantRecipe;
 import xyz.wagyourtail.jsmacros.client.api.classes.VillagerInventory;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused")
-public class TradeOfferHelper extends BaseHelper<TradeOffer> {
+public class TradeOfferHelper extends BaseHelper<MerchantRecipe> {
     private final VillagerInventory inv;
     private final int index;
-    public TradeOfferHelper(TradeOffer base, int index, VillagerInventory inv) {
+    public TradeOfferHelper(MerchantRecipe base, int index, VillagerInventory inv) {
         super(base);
         this.inv = inv;
         this.index = index;
@@ -24,10 +24,10 @@ public class TradeOfferHelper extends BaseHelper<TradeOffer> {
      */
     public List<ItemStackHelper> getInput() {
         List<ItemStackHelper> items = new ArrayList<>();
-        ItemStack first = base.getAdjustedFirstBuyItem();
-        if (!first.isEmpty()) items.add(new ItemStackHelper(first));
-        ItemStack second = base.getSecondBuyItem();
-        if (second != null && !second.isEmpty()) items.add(new ItemStackHelper(second));
+        ItemStack first = base.getItemToBuy();
+        if (first != null) items.add(new ItemStackHelper(first));
+        ItemStack second = base.getSecondItemToBuy();
+        if (second != null) items.add(new ItemStackHelper(second));
         return items;
     }
     
@@ -35,14 +35,14 @@ public class TradeOfferHelper extends BaseHelper<TradeOffer> {
      * @return output item that will be recieved
      */
     public ItemStackHelper getOutput() {
-        return new ItemStackHelper(base.getSellItem());
+        return new ItemStackHelper(base.getItemToSell());
     }
     
     /**
      * select trade offer on screen
      */
     public void select() {
-        if (inv != null && MinecraftClient.getInstance().currentScreen == inv.getRawContainer())
+        if (inv != null && Minecraft.getMinecraft().currentScreen == inv.getRawContainer())
             inv.selectTrade(index);
     }
     
@@ -50,42 +50,42 @@ public class TradeOfferHelper extends BaseHelper<TradeOffer> {
      * @return
      */
     public boolean isAvailable() {
-        return !base.isDisabled();
+        return !base.isRecipeDisabled();
     }
     
     /**
      * @return trade offer as nbt tag
      */
     public String getNBT() {
-        return base.toTag().toString();
+        return base.writeToTags().toString();
     }
     
     /**
      * @return current number of uses
      */
     public int getUses() {
-        return base.getUses();
+        return base.getToolUses();
     }
     
     /**
      * @return max uses before it locks
      */
     public int getMaxUses() {
-        return base.getMaxUses();
+        return base.getMaxTradeUses();
     }
     
     /**
      * @return experience gained for trade
      */
     public int getExperience() {
-        return base.getTraderExperience();
+        return 0;
     }
     
     /**
      * @return current price adjustment, negative is discount.
      */
     public int getCurrentPriceAdjustment() {
-        return base.getAdjustedFirstBuyItem().getCount() - base.getOriginalFirstBuyItem().getCount();
+        return 0;
     }
     
     public String toString() {

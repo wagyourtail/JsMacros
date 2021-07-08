@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.event.impl;
 
-import net.minecraft.text.Text;
+import net.minecraft.util.IChatComponent;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
 import xyz.wagyourtail.jsmacros.core.event.BaseEvent;
 import xyz.wagyourtail.jsmacros.core.event.Event;
@@ -13,7 +13,7 @@ import xyz.wagyourtail.jsmacros.core.event.Event;
 public class EventRecvMessage implements BaseEvent {
     public TextHelper text;
     
-    public EventRecvMessage(Text message) {
+    public EventRecvMessage(IChatComponent message) {
         this.text = new TextHelper(message);
         
         profile.triggerEventJoin(this);

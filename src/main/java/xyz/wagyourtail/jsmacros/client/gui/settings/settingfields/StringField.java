@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.gui.settings.settingfields;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
 import xyz.wagyourtail.jsmacros.client.gui.elements.TextInput;
 import xyz.wagyourtail.jsmacros.client.gui.screens.BaseScreen;
 import xyz.wagyourtail.jsmacros.client.gui.settings.settingcontainer.AbstractSettingContainer;
@@ -11,8 +11,8 @@ import java.lang.reflect.InvocationTargetException;
 
 public class StringField extends AbstractSettingField<String> {
     
-    public StringField(int x, int y, int width, TextRenderer textRenderer, AbstractSettingContainer parent, SettingsOverlay.SettingField<String> field) {
-        super(x, y, width, textRenderer.fontHeight + 2, textRenderer, parent, field);
+    public StringField(int x, int y, int width, FontRenderer textRenderer, AbstractSettingContainer parent, SettingsOverlay.SettingField<String> field) {
+        super(x, y, width, textRenderer.FONT_HEIGHT + 2, textRenderer, parent, field);
     }
     
     @Override
@@ -34,14 +34,14 @@ public class StringField extends AbstractSettingField<String> {
     @Override
     public void setPos(int x, int y, int width, int height) {
         super.setPos(x, y, width, height);
-        for (AbstractButtonWidget btn : buttons) {
-            btn.y = y;
+        for (GuiButton btn : buttons) {
+            btn.yPosition = y;
         }
     }
     
     @Override
     public void render(int mouseX, int mouseY, float delta) {
-        textRenderer.draw(BaseScreen.trimmed(textRenderer, settingName.asFormattedString(), width / 2), x, y + 1, 0xFFFFFF);
+        textRenderer.drawString(BaseScreen.trimmed(textRenderer, settingName.getFormattedText(), width / 2), x, y + 1, 0xFFFFFF);
     }
     
 }

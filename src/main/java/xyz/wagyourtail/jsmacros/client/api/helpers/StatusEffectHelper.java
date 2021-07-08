@@ -1,7 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
+import net.minecraftforge.fml.common.registry.GameData;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
 /**
@@ -9,9 +10,9 @@ import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
  * @since 1.2.4
  */
 @SuppressWarnings("unused")
-public class StatusEffectHelper extends BaseHelper<StatusEffectInstance> {
+public class StatusEffectHelper extends BaseHelper<PotionEffect> {
     
-    public StatusEffectHelper(StatusEffectInstance s) {
+    public StatusEffectHelper(PotionEffect s) {
         super(s);
     }
     
@@ -20,7 +21,7 @@ public class StatusEffectHelper extends BaseHelper<StatusEffectInstance> {
      * @return
      */
     public String getId() {
-        return Registry.STATUS_EFFECT.getId(base.getEffectType()).toString();
+        return GameData.getPotionRegistry().getNameForObject(Potion.potionTypes[base.getPotionID()]).toString();
     }
     
     /**

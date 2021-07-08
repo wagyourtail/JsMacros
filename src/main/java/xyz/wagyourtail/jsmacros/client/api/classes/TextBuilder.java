@@ -1,11 +1,11 @@
 package xyz.wagyourtail.jsmacros.client.api.classes;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.event.HoverEvent;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import xyz.wagyourtail.jsmacros.client.access.CustomClickEvent;
 import xyz.wagyourtail.jsmacros.client.access.IEntity;
 import xyz.wagyourtail.jsmacros.client.access.IStyle;
@@ -23,8 +23,8 @@ import xyz.wagyourtail.jsmacros.core.MethodWrapper;
  */
 @SuppressWarnings("unused")
 public class TextBuilder {
-    private final LiteralText head = new LiteralText("");
-    private Text self = head;
+    private final IChatComponent head = new ChatComponentText("");
+    private IChatComponent self = head;
     
     public TextBuilder() {
     
@@ -48,11 +48,11 @@ public class TextBuilder {
     }
     
     private void appendInternal(String text) {
-        head.append(self = new LiteralText(text));
+        head.appendSibling(self = new ChatComponentText(text));
     }
     
     private void appendInternal(TextHelper helper) {
-        head.append(self = helper.getRaw());
+        head.appendSibling(self = helper.getRaw());
     }
     
     /**
@@ -63,7 +63,7 @@ public class TextBuilder {
      * @return
      */
     public TextBuilder withColor(int color) {
-        self.styled(style -> style.setColor(Formatting.byColorIndex(color)));
+        self.getChatStyle().setColor(EnumChatFormatting.values()[color]);
         return this;
     }
     
@@ -77,7 +77,7 @@ public class TextBuilder {
      * @return
      */
     public TextBuilder withColor(int r, int g, int b) {
-        self.styled(style -> ((IStyle)style).setCustomColor((r & 255) << 16 + (g & 255) << 8 + (b & 255)));
+        ((IStyle)self.getChatStyle()).setCustomColor((r & 255) << 16 + (g & 255) << 8 + (b & 255));
         return this;
     }
     
@@ -92,13 +92,12 @@ public class TextBuilder {
      * @return
      */
     public TextBuilder withFormatting(boolean underline, boolean bold, boolean italic, boolean strikethrough, boolean magic) {
-        self.styled(style -> {
-            style.setUnderline(underline);
-            style.setBold(bold);
-            style.setItalic(italic);
-            style.setStrikethrough(strikethrough);
-            style.setObfuscated(magic);
-        });
+        self.getChatStyle()
+            .setUnderlined(underline)
+            .setBold(bold)
+            .setItalic(italic)
+            .setStrikethrough(strikethrough)
+            .setObfuscated(magic);
         return this;
     }
     
@@ -109,7 +108,7 @@ public class TextBuilder {
      * @return
      */
     public TextBuilder withShowTextHover(TextHelper text) {
-        self.styled(style -> style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, text.getRaw())));
+        self.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, text.getRaw()));
         return this;
     }
     
@@ -120,7 +119,7 @@ public class TextBuilder {
      * @return
      */
     public TextBuilder withShowItemHover(ItemStackHelper item) {
-        self.styled(style -> style.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, item.getRaw().toHoverableText())));
+        self.getChatStyle().setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, item.getRaw().getChatComponent()));
         return this;
     }
     
@@ -132,7 +131,7 @@ public class TextBuilder {
      */
     public TextBuilder withShowEntityHover(EntityHelper<Entity> entity) {
         Entity raw = entity.getRaw();
-        self.styled(style -> style.setHoverEvent(((IEntity)entity.getRaw()).jsmacros_getHoverEvent()));
+        self.getChatStyle().setChatHoverEvent(((IEntity)entity.getRaw()).jsmacros_getHoverEvent());
         return this;
     }
     
@@ -143,13 +142,13 @@ public class TextBuilder {
      * @return
      */
     public TextBuilder withCustomClickEvent(MethodWrapper<Object, Object, Object> action) {
-        self.styled(style -> style.setClickEvent(new CustomClickEvent(() -> new Thread(() -> {
+        self.getChatStyle().setChatClickEvent(new CustomClickEvent(() -> new Thread(() -> {
             try {
                 action.run();
             } catch (Exception ex) {
                 Core.instance.profile.logError(ex);
             }
-        }).start())));
+        }).start()));
         return this;
     }
     
@@ -161,9 +160,9 @@ public class TextBuilder {
      * @return
      */
     public TextBuilder withClickEvent(String action, String value) {
-        ClickEvent.Action clickAction = ClickEvent.Action.byName(action);
+        ClickEvent.Action clickAction = ClickEvent.Action.valueOf(action);
         assert action != null;
-        self.styled(style -> style.setClickEvent(new ClickEvent(clickAction, value)));
+        self.getChatStyle().setChatClickEvent(new ClickEvent(clickAction, value));
         return this;
     }
     

@@ -1,9 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.api.library.impl;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import xyz.wagyourtail.jsmacros.core.library.BaseLibrary;
 import xyz.wagyourtail.jsmacros.core.library.Library;
 
@@ -20,11 +19,11 @@ import java.util.*;
  @Library("KeyBind")
  @SuppressWarnings("unused")
 public class FKeyBind extends BaseLibrary {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getMinecraft();
     /**
      * Don't modify
      */
-    public static final Set<String> pressedKeys = new HashSet<>();
+    public static final Set<Integer> pressedKeys = new HashSet<>();
     
     /**
      * Dont use this one... get the raw minecraft keycode class.
@@ -32,12 +31,14 @@ public class FKeyBind extends BaseLibrary {
      * @param keyName
      * @return the raw minecraft keycode class
      */
-    public InputUtil.KeyCode getKeyCode(String keyName) {
-        try {
-            return InputUtil.fromName(keyName);
-        } catch (Exception e) {
-            return InputUtil.UNKNOWN_KEYCODE;
-        }
+    public int getKeyCode(String keyName) {
+        //TODO:
+//        try {
+//            return InputUtil.fromName(keyName);
+//        } catch (Exception e) {
+//            return InputUtil.UNKNOWN_KEYCODE;
+//        }
+        return 0;
     }
     
     /**
@@ -45,10 +46,10 @@ public class FKeyBind extends BaseLibrary {
      *
      * @return A {@link java.util.Map Map} of all the minecraft keybinds.
      */
-    public Map<String, String> getKeyBindings() {
-        Map<String, String> keys = new HashMap<>();
-        for (KeyBinding key : ImmutableList.copyOf(mc.options.keysAll)) {
-            keys.put(key.getId(), key.getName());
+    public Map<String, Integer> getKeyBindings() {
+        Map<String, Integer> keys = new HashMap<>();
+        for (KeyBinding key : ImmutableList.copyOf(mc.gameSettings.keyBindings)) {
+            keys.put(key.getKeyDescription(), key.getKeyCode());
         }
         return keys;
     }
@@ -61,10 +62,10 @@ public class FKeyBind extends BaseLibrary {
      * @param bind
      * @param key
      */
-    public void setKeyBind(String bind, String key) {
-        for (KeyBinding keybind : mc.options.keysAll) {
-            if (keybind.getName().equals(bind)) {
-                keybind.setKeyCode(InputUtil.fromName(key));
+    public void setKeyBind(String bind, int key) {
+        for (KeyBinding keybind : mc.gameSettings.keyBindings) {
+            if (keybind.getKeyDescription().equals(bind)) {
+                keybind.setKeyCode(key);
                 return;
             }
         }
@@ -86,9 +87,8 @@ public class FKeyBind extends BaseLibrary {
      * @param keyBind
      * @param keyState
      */
-    protected void key(InputUtil.KeyCode keyBind, boolean keyState) {
-        if (keyState) KeyBinding.onKeyPressed(keyBind);
-        KeyBinding.setKeyPressed(keyBind, keyState);
+    protected void key(int keyBind, boolean keyState) {
+        KeyBinding.setKeyBindState(keyBind, keyState);
     }
     
     /**
@@ -101,14 +101,8 @@ public class FKeyBind extends BaseLibrary {
      * @param keyBind
      * @param keyState
      */
-    public void keyBind(String keyBind, boolean keyState) {
-        for (KeyBinding key : mc.options.keysAll) {
-            if (key.getName().equals(keyBind)) {
-                if (keyState) KeyBinding.onKeyPressed(InputUtil.fromName(key.getName()));
-                KeyBinding.setKeyPressed(InputUtil.fromName(key.getName()), keyState);
-                return;
-            }
-        }
+    public void keyBind(int keyBind, boolean keyState) {
+        KeyBinding.setKeyBindState(keyBind, keyState);
     }
     
     /**
@@ -118,8 +112,7 @@ public class FKeyBind extends BaseLibrary {
      * @param keyState
      */
     protected void key(KeyBinding keyBind, boolean keyState) {
-        if (keyState) KeyBinding.onKeyPressed(InputUtil.fromName(keyBind.getName()));
-        KeyBinding.setKeyPressed(InputUtil.fromName(keyBind.getName()), keyState);
+        KeyBinding.setKeyBindState(keyBind.getKeyCode(), keyState);
     }
     
     /**
@@ -127,7 +120,7 @@ public class FKeyBind extends BaseLibrary {
      *
      * @return a list of currently pressed keys.
      */
-    public List<String> getPressedKeys() {
+    public List<Integer> getPressedKeys() {
         synchronized (pressedKeys) {
             return new ArrayList<>(pressedKeys);
         }

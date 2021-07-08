@@ -1,19 +1,17 @@
 package xyz.wagyourtail.jsmacros.client.api.library.impl;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.SignEditScreen;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.ScreenshotUtils;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.inventory.GuiEditSign;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.GameMode;
+import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.ScreenShotHelper;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.WorldSettings;
 import xyz.wagyourtail.jsmacros.client.access.ISignEditScreen;
 import xyz.wagyourtail.jsmacros.client.api.classes.Inventory;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
@@ -45,14 +43,14 @@ import java.util.function.Consumer;
 @Library("Player")
 @SuppressWarnings("unused")
 public class FPlayer extends BaseLibrary {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getMinecraft();
 
     /**
      * @return the Inventory handler
      * @see xyz.wagyourtail.jsmacros.client.api.classes.Inventory
      */
     public Inventory<?> openInventory() {
-        assert mc.player != null && mc.player.inventory != null;
+        assert mc.thePlayer != null && mc.thePlayer.inventory != null;
         return Inventory.create();
     }
 
@@ -61,9 +59,9 @@ public class FPlayer extends BaseLibrary {
      * @see xyz.wagyourtail.jsmacros.client.api.helpers.ClientPlayerEntityHelper
      * @since 1.0.3
      */
-    public ClientPlayerEntityHelper<ClientPlayerEntity> getPlayer() {
-        assert mc.player != null;
-        return new ClientPlayerEntityHelper<>(mc.player);
+    public ClientPlayerEntityHelper<EntityPlayerSP> getPlayer() {
+        assert mc.thePlayer != null;
+        return new ClientPlayerEntityHelper<>(mc.thePlayer);
     }
 
     /**
@@ -71,9 +69,9 @@ public class FPlayer extends BaseLibrary {
      * @since 1.0.9
      */
     public String getGameMode() {
-        assert mc.interactionManager != null;
-        GameMode mode = mc.interactionManager.getCurrentGameMode();
-        if (mode == null) mode = GameMode.NOT_SET;
+        assert mc.playerController != null;
+        WorldSettings.GameType mode = mc.playerController.getCurrentGameType();
+        if (mode == null) mode = WorldSettings.GameType.NOT_SET;
         return mode.getName();
     }
 
@@ -85,13 +83,16 @@ public class FPlayer extends BaseLibrary {
      * @since 1.0.5
      */
     public BlockDataHelper rayTraceBlock(double distance, boolean fluid) {
-        assert mc.world != null;
-        assert mc.player != null;
-        BlockHitResult h = (BlockHitResult) mc.player.rayTrace(distance, 0, fluid);
-        if (h.getType() == HitResult.Type.MISS) return null;
-        BlockState b = mc.world.getBlockState(h.getBlockPos());
-        BlockEntity t = mc.world.getBlockEntity(h.getBlockPos());
-        if (b.getBlock().equals(Blocks.VOID_AIR)) return null;
+        assert mc.theWorld != null;
+        assert mc.thePlayer != null;
+        Vec3 vec3 = mc.thePlayer.getPositionEyes(0);
+        Vec3 vec31 = mc.thePlayer.getLook(0);
+        Vec3 vec32 = vec3.addVector(vec31.xCoord * distance, vec31.yCoord * distance, vec31.zCoord * distance);
+        MovingObjectPosition h = mc.theWorld.rayTraceBlocks(vec3, vec32, fluid, false, true);
+        if (h.typeOfHit == MovingObjectPosition.MovingObjectType.MISS) return null;
+        IBlockState b = mc.theWorld.getBlockState(h.getBlockPos());
+        TileEntity t = mc.theWorld.getTileEntity(h.getBlockPos());
+        if (b.getBlock().equals(Blocks.air)) return null;
         return new BlockDataHelper(b, t, h.getBlockPos());
     }
 
@@ -101,7 +102,7 @@ public class FPlayer extends BaseLibrary {
      * @since 1.0.5
      */
     public EntityHelper<Entity> rayTraceEntity() {
-        if (mc.targetedEntity != null) return new EntityHelper<>(mc.targetedEntity);
+        if (mc.pointedEntity != null) return new EntityHelper<>(mc.pointedEntity);
         else return null;
     }
 
@@ -116,7 +117,7 @@ public class FPlayer extends BaseLibrary {
      * @since 1.2.2
      */
     public boolean writeSign(String l1, String l2, String l3, String l4) {
-        if (mc.currentScreen instanceof SignEditScreen) {
+        if (mc.currentScreen instanceof GuiEditSign) {
             ((ISignEditScreen) mc.currentScreen).jsmacros_setLine(0, l1);
             ((ISignEditScreen) mc.currentScreen).jsmacros_setLine(1, l2);
             ((ISignEditScreen) mc.currentScreen).jsmacros_setLine(2, l3);
@@ -134,10 +135,10 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, MethodWrapper<TextHelper, Object, Object> callback) {
         assert folder != null;
-        ScreenshotUtils.method_1659(new File(Core.instance.config.macroFolder, folder), mc.window.getFramebufferWidth(), mc.window.getFramebufferHeight(),
-            mc.getFramebuffer(), (text) -> {
-                if (callback != null) callback.accept(new TextHelper(text));
-            });
+        mc.addScheduledTask(() -> {
+            IChatComponent text = ScreenShotHelper.saveScreenshot(new File(Core.instance.config.macroFolder, folder), mc.getFramebuffer().framebufferWidth, mc.getFramebuffer().framebufferHeight, mc.getFramebuffer());
+            if (callback != null) callback.accept(new TextHelper(text));
+        });
     }
 
     /**
@@ -152,10 +153,10 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, String file, MethodWrapper<TextHelper, Object, Object> callback) {
         assert folder != null && file != null;
-        ScreenshotUtils.method_1662(new File(Core.instance.config.macroFolder, folder), file, mc.window.getFramebufferWidth(), mc.window.getFramebufferHeight(),
-            mc.getFramebuffer(), (text) -> {
-                if (callback != null) callback.accept(new TextHelper(text));
-            });
+        mc.addScheduledTask(() -> {
+            IChatComponent text = ScreenShotHelper.saveScreenshot(new File(Core.instance.config.macroFolder, folder), file, mc.getFramebuffer().framebufferWidth, mc.getFramebuffer().framebufferHeight, mc.getFramebuffer());
+            if (callback != null) callback.accept(new TextHelper(text));
+        });
     }
 
     /**
@@ -247,8 +248,8 @@ public class FPlayer extends BaseLibrary {
      * @since 1.4.0
      */
     public PlayerInput getCurrentPlayerInput() {
-        assert mc.player != null;
-        return new PlayerInput(mc.player.input, mc.player.yaw, mc.player.pitch, mc.player.isSprinting());
+        assert mc.thePlayer != null;
+        return new PlayerInput(mc.thePlayer.movementInput.moveForward, mc.thePlayer.movementInput.moveStrafe, mc.thePlayer.movementInput.jump, mc.thePlayer.isSprinting());
     }
 
     /**
@@ -259,7 +260,7 @@ public class FPlayer extends BaseLibrary {
      * @since 1.4.0
      */
     public void addInput(PlayerInput input) {
-        MovementQueue.append(input, mc.player);
+        MovementQueue.append(input, mc.thePlayer);
     }
 
     /**
@@ -335,8 +336,8 @@ public class FPlayer extends BaseLibrary {
      * @since 1.4.0
      */
     public List<PositionCommon.Pos3D> predictInputs(List<PlayerInput> inputs, boolean draw) {
-        assert mc.player != null;
-        MovementDummy dummy = new MovementDummy(mc.player);
+        assert mc.thePlayer != null;
+        MovementDummy dummy = new MovementDummy(mc.thePlayer);
         List<PositionCommon.Pos3D> predictions = new ArrayList<>();
         for (PlayerInput input : inputs) {
             predictions.add(new PositionCommon.Pos3D(dummy.applyInput(input)));

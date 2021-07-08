@@ -1,7 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.api.classes;
 
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.text.LiteralText;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ChatComponentText;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.PositionCommon;
 import xyz.wagyourtail.jsmacros.client.api.sharedinterfaces.IScreen;
@@ -23,14 +24,14 @@ public class ScriptScreen extends BaseScreen {
     private MethodWrapper<PositionCommon.Pos3D, Object, Object> onRender;
     
     public ScriptScreen(String title, boolean dirt) {
-        super(new LiteralText(title), null);
+        super(new ChatComponentText(title), null);
         this.bgStyle = dirt ? 0 : 1;
     }
 
     @Override
-    protected void init() {
+    public void initGui() {
         BaseScreen prev = JsMacros.prevScreen;
-        super.init();
+        super.initGui();
         JsMacros.prevScreen = prev;
     }
 
@@ -39,7 +40,7 @@ public class ScriptScreen extends BaseScreen {
      * @since 1.4.0
      */
     public void setParent(IScreen parent) {
-        this.parent = (net.minecraft.client.gui.screen.Screen) parent;
+        this.parent = (GuiScreen) parent;
     }
 
     /**
@@ -53,16 +54,16 @@ public class ScriptScreen extends BaseScreen {
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float delta) {
-        if (bgStyle == 0) this.renderDirtBackground(0);
-        else if (bgStyle == 1) this.renderBackground(0);
+    public void drawScreen(int mouseX, int mouseY, float delta) {
+        if (bgStyle == 0) this.drawBackground(0);
+        else if (bgStyle == 1) this.drawDefaultBackground();
 
-        drawCenteredString(this.font, this.title.asFormattedString(), this.width / 2, 20, 0xFFFFFF);
+        drawCenteredString(this.fontRendererObj, this.title.getFormattedText(), this.width / 2, 20, 0xFFFFFF);
 
-        super.render(mouseX, mouseY, delta);
+        super.drawScreen(mouseX, mouseY, delta);
 
-        for (AbstractButtonWidget button : this.buttons) {
-            button.render(mouseX, mouseY, delta);
+        for (GuiButton button : this.buttonList) {
+            button.drawButton(mc, mouseX, mouseY);
         }
 
         ((IScreen) this).onRenderInternal(mouseX, mouseY, delta);

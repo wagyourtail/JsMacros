@@ -1,5 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.sharedinterfaces;
 
+import net.minecraft.client.gui.GuiButton;
 import xyz.wagyourtail.jsmacros.client.api.helpers.ButtonWidgetHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.ItemStackHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextFieldWidgetHelper;
@@ -8,6 +9,7 @@ import xyz.wagyourtail.jsmacros.client.api.sharedclasses.RenderCommon.Item;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.RenderCommon.Rect;
 import xyz.wagyourtail.jsmacros.core.MethodWrapper;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -125,7 +127,7 @@ public interface IScreen extends IDraw2D<IScreen> {
      * @param onMouseDrag calls your method as a {@link BiConsumer}&lt;{@link PositionCommon.Vec2D}, {@link Integer}&gt;
      * @return
      */
-    IScreen setOnMouseDrag(MethodWrapper<PositionCommon.Vec2D, Integer, Object> onMouseDrag);
+    IScreen setOnMouseDrag(MethodWrapper<PositionCommon.Pos2D, Integer, Object> onMouseDrag);
     
     /**
      * @since 1.2.7
@@ -237,4 +239,18 @@ public interface IScreen extends IDraw2D<IScreen> {
      */
     void onRenderInternal(int mouseX, int mouseY, float delta);
     
+    /**
+     * internal
+     */
+    GuiButton getFocused();
+    
+    /**
+     * internal
+     */
+     void clickBtn(GuiButton btn) throws IOException;
+    
+    /**
+     * internal
+     */
+    MethodWrapper<IScreen, Object, Object> getOnClose();
 }

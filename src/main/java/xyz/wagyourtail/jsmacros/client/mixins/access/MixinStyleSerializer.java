@@ -1,20 +1,20 @@
 package xyz.wagyourtail.jsmacros.client.mixins.access;
 
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Style;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.util.ChatStyle;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(value = Style.Serializer.class, priority = 1001)
+@Mixin(value = ChatStyle.Serializer.class, priority = 1001)
 public class MixinStyleSerializer {
 
-    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/ClickEvent$Action;getName()Ljava/lang/String;"))
+    @Redirect(method = "serialize", at = @At(value = "INVOKE", target = "Lnet/minecraft/event/ClickEvent$Action;getCanonicalName()Ljava/lang/String;"))
     public String redirectClickGetAction(ClickEvent.Action action) {
         if (action == null) {
             return "custom";
         }
-        return action.getName();
+        return action.getCanonicalName();
     }
     
 }

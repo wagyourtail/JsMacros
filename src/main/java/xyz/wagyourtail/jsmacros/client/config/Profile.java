@@ -1,9 +1,9 @@
 package xyz.wagyourtail.jsmacros.client.config;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.event.HoverEvent;
+import net.minecraft.util.*;
 import xyz.wagyourtail.Pair;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.access.CustomClickEvent;
@@ -12,7 +12,6 @@ import xyz.wagyourtail.jsmacros.client.api.event.impl.*;
 import xyz.wagyourtail.jsmacros.client.api.library.impl.*;
 import xyz.wagyourtail.jsmacros.client.gui.screens.EditorScreen;
 import xyz.wagyourtail.jsmacros.client.gui.screens.MacroScreen;
-import xyz.wagyourtail.jsmacros.client.tick.TickBasedEvents;
 import xyz.wagyourtail.jsmacros.core.Core;
 import xyz.wagyourtail.jsmacros.core.config.BaseProfile;
 import xyz.wagyourtail.jsmacros.core.config.CoreConfigV2;
@@ -21,10 +20,7 @@ import xyz.wagyourtail.jsmacros.core.event.IEventListener;
 import xyz.wagyourtail.jsmacros.core.event.impl.EventCustom;
 import xyz.wagyourtail.jsmacros.core.language.BaseWrappedException;
 import xyz.wagyourtail.jsmacros.core.language.ContextContainer;
-import xyz.wagyourtail.jsmacros.core.language.ScriptContext;
 import xyz.wagyourtail.jsmacros.core.library.impl.FJsMacros;
-
-import java.util.concurrent.Semaphore;
 
 public class Profile extends BaseProfile {
     
@@ -35,16 +31,18 @@ public class Profile extends BaseProfile {
     @Override
     protected boolean loadProfile(String profileName) {
         boolean val = super.loadProfile(profileName);
-        final MinecraftClient mc = MinecraftClient.getInstance();
+        final Minecraft mc = Minecraft.getMinecraft();
         if (mc.currentScreen instanceof MacroScreen) {
-            mc.execute(() -> ((MacroScreen) mc.currentScreen).reload());
+            mc.addScheduledTask(() ->
+                ((MacroScreen) mc.currentScreen).reload()
+            );
         }
         return val;
     }
     
     @Override
     public void triggerEventJoin(BaseEvent event) {
-        boolean joinedMain = MinecraftClient.getInstance().isOnThread() || joinedThreadStack.contains(Thread.currentThread());
+        boolean joinedMain = Minecraft.getMinecraft().isCallingFromMinecraftThread() || joinedThreadStack.contains(Thread.currentThread());
         triggerEventJoinNoAnything(event);
     
         for (IEventListener macro : runner.eventRegistry.getListeners("ANYTHING")) {
@@ -54,7 +52,7 @@ public class Profile extends BaseProfile {
     
     @Override
     public void triggerEventJoinNoAnything(BaseEvent event) {
-        boolean joinedMain = MinecraftClient.getInstance().isOnThread() || joinedThreadStack.contains(Thread.currentThread());
+        boolean joinedMain = Minecraft.getMinecraft().isCallingFromMinecraftThread() || joinedThreadStack.contains(Thread.currentThread());
         if (event instanceof EventCustom) {
             for (IEventListener macro : runner.eventRegistry.getListeners(((EventCustom) event).eventName)) {
                 runJoinedEventListener(event, joinedMain, macro);
@@ -88,42 +86,49 @@ public class Profile extends BaseProfile {
     @Override
     public void logError(Throwable ex) {
         ex.printStackTrace();
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.inGameHud != null) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.ingameGUI != null) {
             BaseWrappedException<?> e;
             try {
                 e = runner.wrapException(ex);
             } catch (Throwable t) {
                 t.printStackTrace();
-                mc.execute(() -> ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(new TranslatableText("jsmacros.errorerror").formatted(Formatting.DARK_RED)));
+                mc.addScheduledTask(() -> {
+                    IChatComponent err = new ChatComponentTranslation("jsmacros.errorerror");
+                    err.getChatStyle().setColor(EnumChatFormatting.DARK_RED);
+                    ((IChatHud) mc.ingameGUI.getChatGUI()).jsmacros_addMessageBypass(err);
+                });
                 return;
             }
-            Text text = compileError(e);
-            mc.execute(() -> {
+            IChatComponent text = compileError(e);
+            mc.addScheduledTask(() -> {
                 try {
-                    ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(text);
+                    ((IChatHud) mc.ingameGUI.getChatGUI()).jsmacros_addMessageBypass(text);
                 } catch (Throwable t) {
-                    ((IChatHud) mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(new TranslatableText("jsmacros.errorerror").formatted(Formatting.DARK_RED));
+                    IChatComponent err = new ChatComponentTranslation("jsmacros.errorerror");
+                    err.getChatStyle().setColor(EnumChatFormatting.DARK_RED);
+                    ((IChatHud) mc.ingameGUI.getChatGUI()).jsmacros_addMessageBypass(err);
                     t.printStackTrace();
                 }
             });
         }
     }
     
-    private Text compileError(BaseWrappedException<?> ex) {
+    private IChatComponent compileError(BaseWrappedException<?> ex) {
         if (ex == null) return null;
         BaseWrappedException<?> head = ex;
-        LiteralText text = new LiteralText("");
+        ChatComponentText text = new ChatComponentText("");
         do {
             String message = head.message;
-            Text line = new LiteralText(message).formatted(Formatting.RED);
+            IChatComponent line = new ChatComponentText(message);
+            line.getChatStyle().setColor(EnumChatFormatting.RED);
             if (head.location != null) {
-                Style locationStyle = new Style().setColor(Formatting.GOLD);
+                ChatStyle locationStyle = new ChatStyle().setColor(EnumChatFormatting.GOLD);
                 if (head.location instanceof BaseWrappedException.GuestLocation) {
                     BaseWrappedException.GuestLocation loc = (BaseWrappedException.GuestLocation) head.location;
-                    locationStyle = locationStyle.setHoverEvent(
-                        new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslatableText("jsmacros.clicktoview"))
-                    ).setClickEvent(new CustomClickEvent(() -> {
+                    locationStyle = locationStyle.setChatHoverEvent(
+                        new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentTranslation("jsmacros.clicktoview"))
+                    ).setChatClickEvent(new CustomClickEvent(() -> {
                         if (loc.startIndex > -1) {
                             EditorScreen.openAndScrollToIndex(loc.file, loc.startIndex, loc.endIndex);
                         } else if (loc.line > -1) {
@@ -133,10 +138,12 @@ public class Profile extends BaseProfile {
                         }
                     }));
                 }
-                line.append(new LiteralText(" (" + head.location.toString() + ")").setStyle(locationStyle));
+                IChatComponent sib;
+                line.appendSibling(sib = new ChatComponentText(" (" + head.location.toString() + ")"));
+                sib.setChatStyle(locationStyle);
             }
-            if ((head = head.next) != null) line.append("\n");
-            text.append(line);
+            if ((head = head.next) != null) line.appendText("\n");
+            text.appendSibling(line);
         } while (head != null);
         return text;
     }
@@ -145,7 +152,6 @@ public class Profile extends BaseProfile {
     public void initRegistries() {
         super.initRegistries();
     
-        TickBasedEvents.init();
         runner.eventRegistry.addEvent(EventAirChange.class);
         runner.eventRegistry.addEvent(EventArmorChange.class);
         runner.eventRegistry.addEvent(EventBlockUpdate.class);

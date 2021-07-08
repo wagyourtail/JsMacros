@@ -1,8 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.api.event.impl;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
 import xyz.wagyourtail.jsmacros.client.api.helpers.BlockDataHelper;
 import xyz.wagyourtail.jsmacros.core.event.BaseEvent;
 import xyz.wagyourtail.jsmacros.core.event.Event;
@@ -16,7 +16,7 @@ public class EventBlockUpdate implements BaseEvent {
     public final BlockDataHelper block;
     public final String updateType;
     
-    public EventBlockUpdate(BlockState block, BlockEntity blockEntity, BlockPos blockPos, String updateType) {
+    public EventBlockUpdate(IBlockState block, TileEntity blockEntity, BlockPos blockPos, String updateType) {
         this.block = new BlockDataHelper(block, blockEntity, blockPos);
         this.updateType = updateType;
         

@@ -1,9 +1,9 @@
 package xyz.wagyourtail.jsmacros.client.gui.containers;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.util.IChatComponent;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Button;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Scrollbar;
 import xyz.wagyourtail.jsmacros.client.gui.overlays.IOverlayParent;
@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ListContainer extends MultiElementContainer<IContainerParent> {
-    private final List<Text> list;
+    private final List<IChatComponent> list;
     private final List<Button> listItems = new LinkedList<>();
     private Scrollbar scroll;
     private int topScroll;
     private int selected = -1;
     public Consumer<Integer> onSelect;
     
-    public ListContainer(int x, int y, int width, int height, TextRenderer textRenderer, List<Text> list, IOverlayParent parent, Consumer<Integer> onSelect) {
+    public ListContainer(int x, int y, int width, int height, FontRenderer textRenderer, List<IChatComponent> list, IOverlayParent parent, Consumer<Integer> onSelect) {
         super(x, y, width, height, textRenderer, parent);
         this.list = list;
         this.onSelect = onSelect;
@@ -34,12 +34,12 @@ public class ListContainer extends MultiElementContainer<IContainerParent> {
         
         scroll = this.addButton(new Scrollbar(x + width - 10, y + 13, 8, height - 28, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
         
-        for (Text element : list) {
+        for (IChatComponent element : list) {
             addItem(element);
         }
     }
     
-    public void addItem(Text name) {
+    public void addItem(IChatComponent name) {
         int index = listItems.size();
         listItems.add(new Button(x+3+(list.size() % 5 * (width - 12) / 5), topScroll + (list.size() / 5 * 12), (width - 12) / 5, 12, textRenderer, 0, 0, 0x7FFFFFFF, 0xFFFFFF, name, (btn) -> setSelected(index)));
     }
@@ -62,18 +62,18 @@ public class ListContainer extends MultiElementContainer<IContainerParent> {
     @Override
     public void render(int mouseX, int mouseY, float delta) {
         
-        for (AbstractButtonWidget b : ImmutableList.copyOf(this.buttons)) {
+        for (GuiButton b : ImmutableList.copyOf(this.buttons)) {
             if (b instanceof Button && ((Button) b).hovering && ((Button) b).cantRenderAllText()) {
                 // border
-                int width = textRenderer.getStringWidth(b.getMessage());
-                fill(mouseX - 3, mouseY, mouseX + width + 3, mouseY + 1, 0x7F7F7F7F);
-                fill(mouseX+width+2, mouseY-textRenderer.fontHeight - 3, mouseX + width + 3, mouseY, 0x7F7F7F7F);
-                fill(mouseX-3, mouseY-textRenderer.fontHeight - 3, mouseX-2, mouseY, 0x7F7F7F7F);
-                fill(mouseX-3, mouseY-textRenderer.fontHeight - 4, mouseX+width+3, mouseY - textRenderer.fontHeight - 3, 0x7F7F7F7F);
+                int width = textRenderer.getStringWidth(b.displayString);
+                drawRect(mouseX - 3, mouseY, mouseX + width + 3, mouseY + 1, 0x7F7F7F7F);
+                drawRect(mouseX+width+2, mouseY-textRenderer.FONT_HEIGHT - 3, mouseX + width + 3, mouseY, 0x7F7F7F7F);
+                drawRect(mouseX-3, mouseY-textRenderer.FONT_HEIGHT - 3, mouseX-2, mouseY, 0x7F7F7F7F);
+                drawRect(mouseX-3, mouseY-textRenderer.FONT_HEIGHT - 4, mouseX+width+3, mouseY - textRenderer.FONT_HEIGHT - 3, 0x7F7F7F7F);
                 
                 // fill
-                fill(mouseX-2, mouseY - textRenderer.fontHeight - 3, mouseX+width+2, mouseY, 0xFF000000);
-                drawString(textRenderer, b.getMessage(), mouseX, mouseY-textRenderer.fontHeight - 1, 0xFFFFFF);
+                drawRect(mouseX-2, mouseY - textRenderer.FONT_HEIGHT - 3, mouseX+width+2, mouseY, 0xFF000000);
+                drawString(textRenderer, b.displayString, mouseX, mouseY-textRenderer.FONT_HEIGHT - 1, 0xFFFFFF);
             }
         }
     }

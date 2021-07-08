@@ -1,18 +1,18 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.client.network.ClientPlayerEntity;
+import com.google.common.collect.Lists;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.AbstractTraderEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.EntityVillager;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.MathHelper;
+import xyz.wagyourtail.jsmacros.client.access.IEntity;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.PositionCommon;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Wagyourtail
@@ -29,7 +29,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return entity position.
      */
     public PositionCommon.Pos3D getPos() {
-        return new PositionCommon.Pos3D(base.x, base.y, base.z);
+        return new PositionCommon.Pos3D(base.posX, base.posY, base.posZ);
     }
     
     /**
@@ -37,7 +37,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the {@code x} value of the entity.
      */
     public double getX() {
-        return base.x;
+        return base.posX;
     }
 
     /**
@@ -45,7 +45,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the {@code y} value of the entity.
      */
     public double getY() {
-        return base.y;
+        return base.posY;
     }
     
     /**
@@ -53,7 +53,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the {@code z} value of the entity.
      */
     public double getZ() {
-        return base.z;
+        return base.posZ;
     }
 
     /**
@@ -61,7 +61,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the current eye height offset for the entitye.
      */
     public double getEyeHeight() {
-        return base.getEyeHeight(base.getPose());
+        return base.getEyeHeight();
     }
 
     /**
@@ -69,7 +69,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the {@code pitch} value of the entity.
      */
     public float getPitch() {
-        return base.pitch;
+        return base.rotationPitch;
     }
     
     /**
@@ -77,21 +77,21 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the {@code yaw} value of the entity.
      */
     public float getYaw() {
-        return MathHelper.wrapDegrees(base.yaw);
+        return MathHelper.wrapAngleTo180_float(base.rotationYaw);
     }
     
     /**
      * @return the name of the entity.
      */
     public String getName() {
-        return base.getName().getString();
+        return base.getName();
     }
     
     /**
      * @return the type of the entity.
      */
     public String getType() {
-        return EntityType.getId(base.getType()).toString();
+        return EntityList.getEntityString(base);
     }
     
     /**
@@ -99,7 +99,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return if the entity has the glowing effect.
      */
     public boolean isGlowing() {
-        return base.isGlowing();
+        return false;
     }
     
     /**
@@ -115,7 +115,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return if the entity is on fire.
      */
     public boolean isOnFire() {
-        return base.isOnFire();
+        return ((IEntity) base).isOnFire();
     }
     
     /**
@@ -123,7 +123,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the vehicle of the entity.
      */
     public EntityHelper<?> getVehicle() {
-        Entity parent = base.getVehicle();
+        Entity parent = base.ridingEntity;
         if (parent != null) return EntityHelper.create(parent);
         return null;
     }
@@ -133,9 +133,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return the entity passengers.
      */
     public List<EntityHelper<?>> getPassengers() {
-        List<EntityHelper<?>> entities = base.getPassengerList().stream().map(EntityHelper::create).collect(Collectors.toList());
-        return entities.size() == 0 ? null : entities;
-        
+        return Lists.newArrayList(EntityHelper.create(base.riddenByEntity));
     }
     
     /**
@@ -143,7 +141,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return
      */
     public String getNBT() {
-        return base.toTag(new CompoundTag()).toString();
+        return base.getNBTTagCompound().toString();
     }
     
     /**
@@ -153,7 +151,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return
      */
     public EntityHelper<T> setGlowing(boolean val) {
-        base.setGlowing(val);
+//        base.setGlowing(val);
         return this;
     }
     
@@ -163,7 +161,7 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
      * @return
      */
     public boolean isAlive() {
-        return base.isAlive();
+        return base.isEntityAlive();
     }
     
     public String toString() {
@@ -171,10 +169,10 @@ public class EntityHelper<T extends Entity> extends BaseHelper<T> {
     }
     
     public static EntityHelper<?> create(Entity e) {
-        if (e instanceof ClientPlayerEntity) return new ClientPlayerEntityHelper<>((ClientPlayerEntity) e);
-        if (e instanceof PlayerEntity) return new PlayerEntityHelper<>((PlayerEntity) e);
-        if (e instanceof AbstractTraderEntity) return new MerchantEntityHelper((AbstractTraderEntity) e);
-        if (e instanceof LivingEntity) return new LivingEntityHelper<>((LivingEntity) e);
+        if (e instanceof EntityPlayerSP) return new ClientPlayerEntityHelper<>((EntityPlayerSP) e);
+        if (e instanceof EntityPlayer) return new PlayerEntityHelper<>((EntityPlayer) e);
+        if (e instanceof EntityVillager) return new MerchantEntityHelper((EntityVillager) e);
+        if (e instanceof EntityLivingBase) return new LivingEntityHelper<>((EntityLivingBase) e);
         return new EntityHelper<>(e);
     }
 }

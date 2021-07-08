@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.core.library.impl;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.client.MinecraftClient;
+import xyz.wagyourtail.jsmacros.client.JsMacros;
 import net.minecraft.util.Util;
 import org.graalvm.polyglot.Context;
 import xyz.wagyourtail.Pair;
@@ -146,7 +146,7 @@ public class FJsMacros extends BaseLibrary {
      * @param path relative to the macro folder.
      */
     public void open(String path) {
-        Util.getOperatingSystem().open(new File(Core.instance.config.macroFolder, path));
+        JsMacros.openFile(new File(Core.instance.config.macroFolder, path));
     }
     
     /**

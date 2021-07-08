@@ -1,8 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.access;
 
-import net.minecraft.text.Text;
+import net.minecraft.util.IChatComponent;
 
 public interface IPlayerListHud {
-    Text jsmacros_getHeader();
-    Text jsmacros_getFooter();
+    IChatComponent jsmacros_getHeader();
+    IChatComponent jsmacros_getFooter();
 }

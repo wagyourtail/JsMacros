@@ -1,9 +1,9 @@
 package xyz.wagyourtail.jsmacros.client.gui.overlays;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MathHelper;
+import org.lwjgl.input.Keyboard;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Button;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Scrollbar;
 
@@ -14,16 +14,16 @@ import java.util.function.Consumer;
 
 public class SelectorDropdownOverlay extends OverlayContainer {
     private final int lineHeight;
-    private final Collection<Text> choices;
+    private final Collection<IChatComponent> choices;
     private final List<Button> scrollChoices = new LinkedList<>();
     private final Consumer<Integer> onChoice;
     protected int selected = -1;
     private final double pages;
     
-    public SelectorDropdownOverlay(int x, int y, int width, int height, Collection<Text> choices, TextRenderer textRenderer, IOverlayParent parent, Consumer<Integer> onChoice) {
+    public SelectorDropdownOverlay(int x, int y, int width, int height, Collection<IChatComponent> choices, FontRenderer textRenderer, IOverlayParent parent, Consumer<Integer> onChoice) {
         super(x, y, width, height, textRenderer, parent);
         this.choices = choices;
-        this.lineHeight = textRenderer.fontHeight + 1;
+        this.lineHeight = textRenderer.FONT_HEIGHT + 1;
         this.onChoice = onChoice;
         this.pages = lineHeight * choices.size() / (height - 4F);
     }
@@ -34,7 +34,7 @@ public class SelectorDropdownOverlay extends OverlayContainer {
         if (pages > 1) this.scroll = addButton(new Scrollbar(x+width-8, y, 8, height, 0, 0xFF000000, 0xFFFFFFFF, pages, this::onScroll));
         int pos = 0;
         int scrollwidth = pages <= 1 ? width - 4 : width - 10;
-        for (Text choice : choices) {
+        for (IChatComponent choice : choices) {
             final int finalPos = pos;
             Button ch = this.addButton(new Button(x + 2, y + pos * lineHeight + 2, scrollwidth, lineHeight, textRenderer, 0, 0xFF000000, 0x4FFFFFFF, 0xFFFFFFFF, choice, (b) -> {
                 if (onChoice != null) onChoice.accept(finalPos);
@@ -67,22 +67,22 @@ public class SelectorDropdownOverlay extends OverlayContainer {
     
     public void setSelected(int sel) {
         if (selected != -1) scrollChoices.get(selected).forceHover = false;
-        selected = MathHelper.clamp(sel, -1, scrollChoices.size() - 1);
+        selected = MathHelper.clamp_int(sel, -1, scrollChoices.size() - 1);
         if (selected != -1) scrollChoices.get(selected).forceHover = true;
     }
     
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         switch (keyCode) {
-            case GLFW.GLFW_KEY_UP:
+            case Keyboard.KEY_UP:
                 if (selected == -1) return false;
                 setSelected(selected - 1);
                 return true;
-            case GLFW.GLFW_KEY_DOWN:
+            case Keyboard.KEY_DOWN:
                 setSelected(selected + 1);
                 return true;
-            case GLFW.GLFW_KEY_ENTER:
-            case GLFW.GLFW_KEY_TAB:
+            case Keyboard.KEY_RETURN:
+            case Keyboard.KEY_TAB:
                 if (onChoice != null) onChoice.accept(selected);
                 close();
                 return true;

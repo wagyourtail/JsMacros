@@ -1,8 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.gui.settings.settingcontainer;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
 import xyz.wagyourtail.jsmacros.client.gui.elements.AnnotatedCheckBox;
 import xyz.wagyourtail.jsmacros.client.gui.overlays.TextPrompt;
 import xyz.wagyourtail.jsmacros.client.gui.settings.SettingsOverlay;
@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public class ColorMapSetting extends AbstractMapSettingContainer<short[], ColorMapSetting.ColorEntry> {
     
-    public ColorMapSetting(int x, int y, int width, int height, TextRenderer textRenderer, SettingsOverlay parent, String[] group) {
+    public ColorMapSetting(int x, int y, int width, int height, FontRenderer textRenderer, SettingsOverlay parent, String[] group) {
         super(x, y, width, height, textRenderer, parent, group);
         defaultValue = () -> new short[3];
     }
@@ -23,7 +23,7 @@ public class ColorMapSetting extends AbstractMapSettingContainer<short[], ColorM
         map.put(key, entry);
         totalHeight +=  entry.height;
         scroll.setScrollPages(totalHeight / (double) height);
-        if (scroll.active) {
+        if (scroll.enabled) {
             scroll.scrollToPercent(0);
         } else {
             onScrollbar(0);
@@ -32,7 +32,7 @@ public class ColorMapSetting extends AbstractMapSettingContainer<short[], ColorM
     
     public static class ColorEntry extends AbstractMapSettingContainer.MapSettingEntry<short[]> {
         
-        public ColorEntry(int x, int y, int width, TextRenderer textRenderer, ColorMapSetting parent, String key, short[] value) {
+        public ColorEntry(int x, int y, int width, FontRenderer textRenderer, ColorMapSetting parent, String key, short[] value) {
             super(x, y, width, textRenderer, (AbstractMapSettingContainer) parent, key, value);
         }
     
@@ -57,18 +57,18 @@ public class ColorMapSetting extends AbstractMapSettingContainer<short[], ColorM
         public void init() {
             super.init();
             int w = width - height;
-            this.addButton(new AnnotatedCheckBox(x + w / 2, y, w / 2, height, textRenderer, convertColorToInt(value), 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(convertColorToString(value)), true, (btn) -> {
+            this.addButton(new AnnotatedCheckBox(x + w / 2, y, w / 2, height, textRenderer, convertColorToInt(value), 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new ChatComponentText(convertColorToString(value)), true, (btn) -> {
                 ((AnnotatedCheckBox)btn).value = true;
                 int x = parent.x;
                 int y = parent.y;
                 int width = parent.width;
                 int height = parent.height;
-                TextPrompt prompt = new TextPrompt(x + width / 4, y + height / 4, width / 2, height / 2, textRenderer, new TranslatableText("jsmacros.setvalue"), convertColorToString(value), getFirstOverlayParent(), (str) -> {
+                TextPrompt prompt = new TextPrompt(x + width / 4, y + height / 4, width / 2, height / 2, textRenderer, new ChatComponentTranslation("jsmacros.setvalue"), convertColorToString(value), getFirstOverlayParent(), (str) -> {
                     try {
                         short[] newVal = convertStringToColor(str);
                         parent.changeValue(key, newVal);
                         btn.setColor(convertColorToInt(newVal));
-                        btn.setMessage(new LiteralText(str));
+                        btn.setMessage(new ChatComponentText(str));
                     } catch (InvocationTargetException | IllegalAccessException e) {
                         e.printStackTrace();
                     }

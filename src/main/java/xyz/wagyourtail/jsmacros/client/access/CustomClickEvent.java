@@ -1,7 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.access;
 
-import net.minecraft.text.ClickEvent;
-
+import net.minecraft.event.ClickEvent;
 public class CustomClickEvent extends ClickEvent {
     Runnable event;
     

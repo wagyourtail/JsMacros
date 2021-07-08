@@ -1,48 +1,57 @@
 package xyz.wagyourtail.jsmacros.client.gui.screens;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.text.Text;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.IChatComponent;
+import org.lwjgl.input.Keyboard;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
+import xyz.wagyourtail.jsmacros.client.access.IMouseScrolled;
+import xyz.wagyourtail.jsmacros.client.api.sharedinterfaces.IScreen;
+import xyz.wagyourtail.jsmacros.client.gui.elements.Scrollbar;
+import xyz.wagyourtail.jsmacros.client.gui.elements.TextInput;
 import xyz.wagyourtail.jsmacros.client.gui.overlays.IOverlayParent;
 import xyz.wagyourtail.jsmacros.client.gui.overlays.OverlayContainer;
 
-public abstract class BaseScreen extends Screen implements IOverlayParent {
-    protected Screen parent;
-    protected OverlayContainer overlay;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-    protected BaseScreen(Text title, Screen parent) {
-        super(title);
+public abstract class BaseScreen extends GuiScreen implements IOverlayParent, IMouseScrolled {
+    public GuiScreen parent;
+    protected OverlayContainer overlay;
+    protected IChatComponent title;
+    private final int[] prevMouseX = new int[] {0,0,0,0,0,0};
+    private final int[] prevMouseY = new int[] {0,0,0,0,0,0};
+    
+    protected BaseScreen(IChatComponent title, GuiScreen parent) {
+        super();
+        this.title = title;
         this.parent = parent;
     }
     
-    public static String trimmed(TextRenderer textRenderer, String str, int width) {
-        return textRenderer.trimToWidth(str, width);
+    public static String trimmed(FontRenderer textRenderer, String str, int width) {
+        return textRenderer.trimStringToWidth(str, width);
     }
     
     public void reload() {
-        init();
+        initGui();
     }
 
     @Override
-    protected void init() {
-        assert minecraft != null;
-        buttons.clear();
-        children.clear();
-        super.init();
+    public void initGui() {
+        assert mc != null;
+        buttonList.clear();
+        super.initGui();
         overlay = null;
         JsMacros.prevScreen = this;
-        minecraft.keyboard.enableRepeatEvents(true);
+        Keyboard.enableRepeatEvents(true);
     }
 
     @Override
-    public void removed() {
-        assert minecraft != null;
-        minecraft.keyboard.enableRepeatEvents(false);
+    public void onGuiClosed() {
+        assert mc != null;
+        Keyboard.enableRepeatEvents(false);
     }
     
     @Override
@@ -68,9 +77,9 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
             return;
         }
         if (disableButtons) {
-            for (AbstractButtonWidget b : buttons) {
-                overlay.savedBtnStates.put(b, b.active);
-                b.active = false;
+            for (GuiButton b : buttonList) {
+                overlay.savedBtnStates.put(b, b.enabled);
+                b.enabled = false;
             }
         }
         this.overlay = overlay;
@@ -80,80 +89,145 @@ public abstract class BaseScreen extends Screen implements IOverlayParent {
     @Override
     public void closeOverlay(OverlayContainer overlay) {
         if (overlay == null) return;
-        for (AbstractButtonWidget b : overlay.getButtons()) {
+        for (GuiButton b : overlay.getButtons()) {
             removeButton(b);
         }
-        for (AbstractButtonWidget b : overlay.savedBtnStates.keySet()) {
-            b.active = overlay.savedBtnStates.get(b);
+        for (GuiButton b : overlay.savedBtnStates.keySet()) {
+            b.enabled = overlay.savedBtnStates.get(b);
         }
         overlay.onClose();
         if (this.overlay == overlay) this.overlay = null;
     }
 
     @Override
-    public void removeButton(AbstractButtonWidget btn) {
-        buttons.remove(btn);
-        children.remove(btn);
+    public void removeButton(GuiButton btn) {
+        buttonList.remove(btn);
     }
     
     @Override
-    public <T extends AbstractButtonWidget> T addButton(T button) {
-        return super.addButton(button);
+    public <T extends GuiButton> T addButton(T button) {
+        buttonList.add(button);
+        return button;
     }
     
     @Override
-    public void setFocused(@Nullable Element focused) {
-        super.setFocused(focused);
+    public void handleKeyboardInput() throws IOException {
+        if (Keyboard.getEventKeyState()) {
+            if (!keyPressed(Keyboard.getEventKey(), 0, createModifiers())) {
+                this.keyTyped(Keyboard.getEventCharacter(), Keyboard.getEventKey());
+            }
+        } else {
+            keyReleased(Keyboard.getEventKey(), 0, createModifiers());
+        }
     }
     
-    @Override
+    public static int createModifiers() {
+        int i = 0;
+        if (GuiScreen.isShiftKeyDown()) i |= 1;
+        if (GuiScreen.isCtrlKeyDown()) i |= 2;
+        if (GuiScreen.isAltKeyDown()) i |= 4;
+        return i;
+    }
+    
+    public static List<Integer> unpackModifiers(int mods) {
+        List<Integer> l = new ArrayList<>();
+        if ((mods & 4) == 4) {
+            l.add(Keyboard.KEY_LMETA);
+        }
+        if ((mods & 2) == 2) {
+            l.add(Keyboard.KEY_LCONTROL);
+        }
+        if ((mods & 1) == 1) {
+            l.add(Keyboard.KEY_LSHIFT);
+        }
+        return l;
+    }
+    
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            if (overlay != null) {
+        if (overlay != null) {
+            if (keyCode == Keyboard.KEY_ESCAPE) {
                 this.overlay.closeOverlay(this.overlay.getChildOverlay());
                 return true;
             }
+            return this.overlay.keyPressed(keyCode, scanCode, modifiers);
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        if (keyCode == Keyboard.KEY_ESCAPE) {
+            this.onClose();
+            return true;
+        }
+        for (GuiButton b : buttonList) {
+            if (b instanceof TextInput && ((TextInput) b).keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+        }
+        return false;
     }
-
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        if (overlay!= null && overlay.scroll != null) overlay.scroll.mouseDragged(mouseX, mouseY, 0, 0, -amount * 2);
-        return super.mouseScrolled(mouseX, mouseY, amount);
+    
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        return false;
     }
     
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseScrolled(int mouseX, int mouseY, int amount) {
+        if (overlay!= null && overlay.scroll != null) overlay.scroll.mouseDragged(mouseX, mouseY, 0, 0, -amount * 2);
+        return false;
+    }
+    
+    public boolean mouseDragged(int mouseX, int mouseY, int button, int deltaX, int deltaY) {
+        GuiButton focused = ((IScreen) this).getFocused();
+        if (focused instanceof Scrollbar) {
+            ((Scrollbar) focused).mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            return true;
+        }
+        for (GuiButton b : buttonList) {
+            if (b instanceof TextInput) {
+                if (((TextInput) b).selected) return ((TextInput) b).mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    public void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
         if (overlay != null) overlay.onClick(mouseX, mouseY, button);
-        return super.mouseClicked(mouseX, mouseY, button);
+        super.mouseClicked(mouseX, mouseY, button);
+    }
+    
+    @Override
+    public void mouseReleased(int mosueX, int mouseY, int button) {
+        super.mouseReleased(mosueX, mouseY, button);
+    }
+    
+    @Override
+    protected void mouseClickMove(int mouseX, int mouseY, int btn, long time) {
+        mouseDragged(mouseX, mouseY, btn, mouseX - prevMouseX[btn], mouseY - prevMouseY[btn]);
+        prevMouseX[btn] = mouseX;
+        prevMouseY[btn] = mouseY;
     }
 
     @Override
-    public void render(int mouseX, int mouseY, float delta) {
+    public void drawScreen(int mouseX, int mouseY, float delta) {
         if (overlay != null) overlay.render(mouseX, mouseY, delta);
     }
-
-    @Override
+    
     public boolean shouldCloseOnEsc() {
         return this.overlay == null;
     }
-
+    
     public void updateSettings() {}
 
-    @Override
     public void onClose() {
-        assert minecraft != null;
-        if (minecraft.world == null)
+        assert mc != null;
+        if (mc.theWorld == null)
             openParent();
         else {
-            setFocused(null);
-            minecraft.openScreen(null);
+            mc.displayGuiScreen(null);
         }
     }
     
     public void openParent() {
-        assert minecraft != null;
-        minecraft.openScreen(parent);
+        assert mc != null;
+        mc.displayGuiScreen(parent);
     }
+    
 }

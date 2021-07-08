@@ -1,14 +1,14 @@
 package xyz.wagyourtail.jsmacros.client.api.classes;
 
-import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import xyz.wagyourtail.jsmacros.client.api.helpers.ItemStackHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.RenderCommon;
 import xyz.wagyourtail.jsmacros.client.api.sharedinterfaces.IDraw2D;
+import xyz.wagyourtail.jsmacros.client.gui.elements.Drawable;
 import xyz.wagyourtail.jsmacros.core.MethodWrapper;
 
 import java.util.*;
@@ -21,7 +21,7 @@ import java.util.*;
  * @see xyz.wagyourtail.jsmacros.client.api.sharedinterfaces.IDraw2D
  */
 @SuppressWarnings("deprecation")
-public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
+public class Draw2D extends Gui implements IDraw2D<Draw2D> {
     private final Set<RenderCommon.RenderElement> elements = new LinkedHashSet<>();
     /**
      * @since 1.0.5
@@ -36,10 +36,13 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
      @Deprecated
     public MethodWrapper<String, Object, Object> catchInit;
     
-    protected final MinecraftClient mc;
+    protected final Minecraft mc;
+    
+    protected final ScaledResolution res;
     
     public Draw2D() {
-        this.mc = MinecraftClient.getInstance();
+        this.mc = Minecraft.getMinecraft();
+        this.res = new ScaledResolution(this.mc);
     }
     
     /**
@@ -48,7 +51,7 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
      */
     @Override
     public int getWidth() {
-        return mc.window.getScaledWidth();
+        return res.getScaledWidth();
     }
 
     /**
@@ -57,7 +60,7 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
      */
     @Override
     public int getHeight() {
-        return mc.window.getScaledHeight();
+        return res.getScaledHeight();
     }
 
     /**
@@ -122,7 +125,7 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
     
     @Override
     public List<RenderCommon.RenderElement> getElements() {
-        return ImmutableList.copyOf(elements);
+        return new ArrayList<>(elements);
     }
     
     @Override
@@ -429,9 +432,8 @@ public class Draw2D extends DrawableHelper implements IDraw2D<Draw2D> {
             }
         }
     }
-
-    @Override
-    public void render() {
+    
+    public void render(int mouseX, int mouseY, float delta) {
         GlStateManager.pushMatrix();
         synchronized (elements) {
             Iterator<RenderCommon.RenderElement> iter = elements.stream().sorted(Comparator.comparingInt(RenderCommon.RenderElement::getZIndex)).iterator();

@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.movement;
 
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.util.Vec3;
 import xyz.wagyourtail.jsmacros.client.api.classes.Draw3D;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
 import xyz.wagyourtail.jsmacros.client.api.library.impl.FHud;
@@ -14,15 +14,15 @@ import static xyz.wagyourtail.jsmacros.client.JsMacros.LOGGER;
 
 public class MovementQueue {
     private static final List<PlayerInput> queue = new ArrayList<>();
-    private static final List<Vec3d> predictions = new ArrayList<>();
+    private static final List<PositionCommon.Pos3D> predictions = new ArrayList<>();
     public static Draw3D predPoints = new Draw3D();
-    private static ClientPlayerEntity player;
+    private static EntityPlayerSP player;
     private static int queuePos = 0;
     private static boolean reCalcPredictions;
 
     private static boolean doDrawPredictions = false;
 
-    public static PlayerInput tick(ClientPlayerEntity newPlayer) {
+    public static PlayerInput tick(EntityPlayerSP newPlayer) {
         if (queuePos == queue.size()) {
             return null;
         }
@@ -30,11 +30,11 @@ public class MovementQueue {
         player = newPlayer;
 
         if (predictions.size() == queue.size() - queuePos + 1 && queuePos != 0) {
-            Vec3d diff = new Vec3d(player.x - predictions.get(0).getX(), player.y - predictions.get(0).getY(), player.z - predictions.get(0).getZ());
-            if (diff.length() > 0.01D) {
-                LOGGER.debug("Pred of by x={}, y={}, z={}", diff.getX(), diff.getY(), diff.getZ());
-                LOGGER.debug("Player pos x={}, y={}, z={}", player.x, player.y, player.z);
-                predPoints.addPoint(player.x, player.y, player.z, 0.02, 0xde070a);
+            Vec3 diff = new Vec3(player.posX - predictions.get(0).getX(), player.posY - predictions.get(0).getY(), player.posZ - predictions.get(0).getZ());
+            if (diff.lengthVector() > 0.01D) {
+                LOGGER.debug("Pred of by x={}, y={}, z={}", diff.xCoord, diff.yCoord, diff.zCoord);
+                LOGGER.debug("Player pos x={}, y={}, z={}", player.posX, player.posY, player.posZ);
+                predPoints.addPoint(player.posX, player.posY, player.posZ, 0.02, 0xde070a);
                 reCalcPredictions = true;
             } else {
                 LOGGER.debug("No Diff");
@@ -71,7 +71,7 @@ public class MovementQueue {
         predictions.forEach(point -> predPoints.addPoint(new PositionCommon.Pos3D(point.getX(), point.getY(), point.getZ()), 0.01, 0xffd000));
     }
 
-    public static void append(PlayerInput input, ClientPlayerEntity newPlayer) {
+    public static void append(PlayerInput input, EntityPlayerSP newPlayer) {
         reCalcPredictions = true;
         player = newPlayer;
         // We do the clone step here, since somewhere one could maybe change the input

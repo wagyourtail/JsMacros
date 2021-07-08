@@ -1,14 +1,14 @@
 package xyz.wagyourtail.jsmacros.client.gui.containers;
 
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.gui.GuiButton;
 import xyz.wagyourtail.jsmacros.client.gui.overlays.IOverlayParent;
 import xyz.wagyourtail.jsmacros.client.gui.overlays.OverlayContainer;
 
 public interface IContainerParent {
     
-    <T extends AbstractButtonWidget> T  addButton(T button);
+    <T extends GuiButton> T  addButton(T button);
     
-    void removeButton(AbstractButtonWidget button);
+    void removeButton(GuiButton button);
     
     void openOverlay(OverlayContainer overlay);
     

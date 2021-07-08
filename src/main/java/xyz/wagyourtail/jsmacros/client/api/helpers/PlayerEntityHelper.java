@@ -1,12 +1,12 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.EntityPlayer;
 
 /**
  * @author Wagyourtail
  */
 @SuppressWarnings("unused")
-public class PlayerEntityHelper<T extends PlayerEntity> extends LivingEntityHelper<T> {
+public class PlayerEntityHelper<T extends EntityPlayer> extends LivingEntityHelper<T> {
     
     public PlayerEntityHelper(T e) {
         super(e);
@@ -18,7 +18,7 @@ public class PlayerEntityHelper<T extends PlayerEntity> extends LivingEntityHelp
      * @return
      */
     public PlayerAbilitiesHelper getAbilities() {
-    	return new PlayerAbilitiesHelper(base.abilities);
+    	return new PlayerAbilitiesHelper(base.capabilities);
     }
     
     
@@ -92,7 +92,7 @@ public class PlayerEntityHelper<T extends PlayerEntity> extends LivingEntityHelp
      * @return if the player has slept the minimum ammount of time to pass the night.
      */
     public boolean isSleepingLongEnough() {
-        return base.isSleepingLongEnough();
+        return true;
     }
     
     public String toString() {

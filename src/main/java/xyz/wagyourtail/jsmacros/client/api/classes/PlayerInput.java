@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.api.classes;
 
 import com.google.gson.Gson;
-import net.minecraft.client.input.Input;
+import net.minecraft.util.MovementInput;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -75,8 +75,8 @@ public class PlayerInput {
      * @see #PlayerInput(float, float, float, float, boolean, boolean, boolean)
      * @since 1.4.0
      */
-    public PlayerInput(Input input, float yaw, float pitch, boolean sprinting) {
-        this(input.movementForward, input.movementSideways, yaw, pitch, input.jumping, input.sneaking, sprinting);
+    public PlayerInput(MovementInput input, float yaw, float pitch, boolean sprinting) {
+        this(input.moveForward, input.moveStrafe, yaw, pitch, input.jump, input.sneak, sprinting);
     }
 
     /**

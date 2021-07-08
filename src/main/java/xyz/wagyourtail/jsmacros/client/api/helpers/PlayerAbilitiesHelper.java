@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.entity.player.PlayerAbilities;
+import net.minecraft.entity.player.PlayerCapabilities;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
 /**
@@ -8,9 +8,9 @@ import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
  * @since 1.0.3
  */
 @SuppressWarnings("unused")
-public class PlayerAbilitiesHelper extends BaseHelper<PlayerAbilities> {
+public class PlayerAbilitiesHelper extends BaseHelper<PlayerCapabilities> {
 	
-	public PlayerAbilitiesHelper(PlayerAbilities a) {
+	public PlayerAbilitiesHelper(PlayerCapabilities a) {
 		super(a);
 	}
 	
@@ -19,7 +19,7 @@ public class PlayerAbilitiesHelper extends BaseHelper<PlayerAbilities> {
 	 * @return whether the player can be damaged.
 	 */
 	public boolean getInvulnerable() {
-		return base.invulnerable;
+		return base.disableDamage;
 	}
 	
 	/**
@@ -27,7 +27,7 @@ public class PlayerAbilitiesHelper extends BaseHelper<PlayerAbilities> {
 	 * @return if the player is currently flying.
 	 */
 	public boolean getFlying() {
-		return base.flying;
+		return base.isFlying;
 	}
 	
 	/**
@@ -43,7 +43,7 @@ public class PlayerAbilitiesHelper extends BaseHelper<PlayerAbilities> {
 	 * @return if the player is in creative.
 	 */
 	public boolean getCreativeMode() {
-		return base.creativeMode;
+		return base.isCreativeMode;
 	}
 	
 	/**
@@ -54,7 +54,7 @@ public class PlayerAbilitiesHelper extends BaseHelper<PlayerAbilities> {
 	 * @return
 	 */
 	public PlayerAbilitiesHelper setFlying(boolean b) {
-		base.flying = b;
+		base.isFlying = b;
 		return this;
 	}
 	

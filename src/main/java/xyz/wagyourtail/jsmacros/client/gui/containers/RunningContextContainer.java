@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.gui.containers;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.text.LiteralText;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.ChatComponentText;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Button;
 import xyz.wagyourtail.jsmacros.client.gui.screens.CancelScreen;
@@ -14,7 +14,7 @@ public class RunningContextContainer extends MultiElementContainer<CancelScreen>
     private Button cancelButton;
     public WeakReference<ScriptContext<?>> t;
     
-    public RunningContextContainer(int x, int y, int width, int height, TextRenderer textRenderer, CancelScreen parent, ScriptContext<?> t) {
+    public RunningContextContainer(int x, int y, int width, int height, FontRenderer textRenderer, CancelScreen parent, ScriptContext<?> t) {
         super(x, y, width, height, textRenderer, parent);
         this.t = new WeakReference<>(t);
         init();
@@ -23,7 +23,7 @@ public class RunningContextContainer extends MultiElementContainer<CancelScreen>
     @Override
     public void init() {
         super.init();
-        cancelButton = this.addButton(new Button(x+1, y+1, height - 2, height - 2, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText("X"), (btn) -> {
+        cancelButton = this.addButton(new Button(x+1, y+1, height - 2, height - 2, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new ChatComponentText("X"), (btn) -> {
                 ScriptContext<?> ctx = t.get();
                 if (ctx != null && !ctx.isContextClosed())
                     ctx.closeContext();
@@ -43,15 +43,15 @@ public class RunningContextContainer extends MultiElementContainer<CancelScreen>
             ScriptContext<?> ctx = t.get();
             if (ctx != null && !ctx.isContextClosed()) {
                 if (this.visible) {
-                    drawCenteredString(textRenderer, textRenderer.trimToWidth(Core.instance.contexts.get(t.get()), width - 105 - height), x + (width - 105 - height) / 2 + height + 4, y+2, 0xFFFFFF);
-                    drawCenteredString(textRenderer, textRenderer.trimToWidth(DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - ctx.startTime), 100), x+width - 50 + height, y+2, 0xFFFFFF);
-                    fill(x+width-101, y, x+width-100, y+height, 0xFFFFFFFF);
-                    fill(x+height, y, x+height+1, y+height, 0xFFFFFFFF);
+                    drawCenteredString(textRenderer, textRenderer.trimStringToWidth(Core.instance.contexts.get(t.get()), width - 105 - height), x + (width - 105 - height) / 2 + height + 4, y+2, 0xFFFFFF);
+                    drawCenteredString(textRenderer, textRenderer.trimStringToWidth(DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - ctx.startTime), 100), x+width - 50 + height, y+2, 0xFFFFFF);
+                    drawRect(x+width-101, y, x+width-100, y+height, 0xFFFFFFFF);
+                    drawRect(x+height, y, x+height+1, y+height, 0xFFFFFFFF);
                     // border
-                    fill(x, y, x + width, y + 1, 0xFFFFFFFF);
-                    fill(x, y + height - 1, x + width, y + height, 0xFFFFFFFF);
-                    fill(x, y + 1, x + 1, y + height - 1, 0xFFFFFFFF);
-                    fill(x + width - 1, y + 1, x + width, y + height - 1, 0xFFFFFFFF);
+                    drawRect(x, y, x + width, y + 1, 0xFFFFFFFF);
+                    drawRect(x, y + height - 1, x + width, y + height, 0xFFFFFFFF);
+                    drawRect(x, y + 1, x + 1, y + height - 1, 0xFFFFFFFF);
+                    drawRect(x + width - 1, y + 1, x + width, y + height - 1, 0xFFFFFFFF);
                 }
             } else {
                 parent.removeContainer(this);

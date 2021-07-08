@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
 /**
@@ -9,9 +9,9 @@ import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
  * @since 1.0.2
  */
 @SuppressWarnings("unused")
-public class PlayerListEntryHelper extends BaseHelper<PlayerListEntry> {
+public class PlayerListEntryHelper extends BaseHelper<NetworkPlayerInfo> {
     
-    public PlayerListEntryHelper(PlayerListEntry p) {
+    public PlayerListEntryHelper(NetworkPlayerInfo p) {
         super(p);
     }
     
@@ -20,7 +20,7 @@ public class PlayerListEntryHelper extends BaseHelper<PlayerListEntry> {
      * @return
      */
     public String getUUID() {
-        GameProfile prof = base.getProfile();
+        GameProfile prof = base.getGameProfile();
         if (prof == null) return null;
         return prof.getId().toString();
     }
@@ -30,7 +30,7 @@ public class PlayerListEntryHelper extends BaseHelper<PlayerListEntry> {
      * @return
      */
     public String getName() {
-        GameProfile prof = base.getProfile();
+        GameProfile prof = base.getGameProfile();
         if (prof == null) return null;
         return prof.getName();
     }

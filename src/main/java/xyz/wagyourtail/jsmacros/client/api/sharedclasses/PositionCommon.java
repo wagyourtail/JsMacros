@@ -1,7 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.sharedclasses;
-
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 
 /**
  * @author Wagyourtail
@@ -61,8 +60,12 @@ public class PositionCommon {
         public static final Pos3D ZERO = new Pos3D(0, 0, 0);
         public double z;
 
-        public Pos3D(Vec3d vec) {
-            this(vec.getX(), vec.getY(), vec.getZ());
+        public Pos3D(Pos3D vec) {
+            this(vec.x, vec.y, vec.z);
+        }
+
+        public Pos3D(Vec3 vec) {
+            this(vec.xCoord, vec.yCoord, vec.zCoord);
         }
 
         public Pos3D(double x, double y, double z) {
@@ -248,13 +251,13 @@ public class PositionCommon {
             double dy = y2 - y1;
             double dz = z2 - z1;
             double xz = Math.sqrt(dx*dx + dz*dz);
-            return  90F - (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(xz, -dy)));
+            return  90F - (float) MathHelper.wrapAngleTo180_double(Math.toDegrees(Math.atan2(xz, -dy)));
         }
 
         public float getYaw() {
             double dx = x2 - x1;
             double dz = z2 - z1;
-            return (float) -MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(dx, dz)));
+            return (float) -MathHelper.wrapAngleTo180_double(Math.toDegrees(Math.atan2(dx, dz)));
         }
 
         public double dotProduct(Vec3D vec) {

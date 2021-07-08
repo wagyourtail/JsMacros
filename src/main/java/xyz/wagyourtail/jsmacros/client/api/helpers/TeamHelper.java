@@ -21,7 +21,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public String getName() {
-        return base.getName();
+        return base.getRegisteredName();
     }
     
     /**
@@ -29,7 +29,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public TextHelper getDisplayName() {
-        return new TextHelper(base.getDisplayName());
+        return new TextHelper(base.getRegisteredName());
     }
     
     /**
@@ -37,7 +37,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public List<String> getPlayerList() {
-        return new ArrayList<>(base.getPlayerList());
+        return new ArrayList<>(base.getMembershipCollection());
     }
     
     /**
@@ -45,7 +45,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public int getColor() {
-        return base.getColor().getColorIndex();
+        return -1;
     }
     
     /**
@@ -53,7 +53,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public TextHelper getPrefix() {
-        return new TextHelper(base.getPrefix());
+        return null;
     }
     
     /**
@@ -61,7 +61,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public TextHelper getSuffix() {
-        return new TextHelper(base.getSuffix());
+        return null;
     }
     
     /**
@@ -69,7 +69,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public String getCollisionRule() {
-        return base.getCollisionRule().toString();
+        return null;
     }
     
     /**
@@ -77,7 +77,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public boolean isFriendlyFire() {
-        return base.isFriendlyFireAllowed();
+        return base.getAllowFriendlyFire();
     }
     
     /**
@@ -85,7 +85,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public boolean showFriendlyInvisibles() {
-        return base.shouldShowFriendlyInvisibles();
+        return base.getSeeFriendlyInvisiblesEnabled();
     }
     
     /**
@@ -93,7 +93,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public String nametagVisibility() {
-        return base.getNameTagVisibilityRule().toString();
+        return base.getNameTagVisibility().toString();
     }
     
     /**
@@ -101,7 +101,7 @@ public class TeamHelper extends BaseHelper<Team> {
      * @return
      */
     public String deathMessageVisibility() {
-        return base.getDeathMessageVisibilityRule().toString();
+        return base.getDeathMessageVisibility().toString();
     }
     
     public String toString() {

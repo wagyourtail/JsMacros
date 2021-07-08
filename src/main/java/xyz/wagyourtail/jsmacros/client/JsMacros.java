@@ -1,22 +1,20 @@
 package xyz.wagyourtail.jsmacros.client;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.*;
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.inventory.*;
+import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Context.Builder;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.input.Keyboard;
 import xyz.wagyourtail.jsmacros.client.config.ClientConfigV2;
 import xyz.wagyourtail.jsmacros.client.config.Profile;
 import xyz.wagyourtail.jsmacros.client.event.EventRegistry;
@@ -26,25 +24,28 @@ import xyz.wagyourtail.jsmacros.client.movement.MovementQueue;
 import xyz.wagyourtail.jsmacros.core.Core;
 
 import java.io.File;
-import java.util.Objects;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 
-public class JsMacros implements ClientModInitializer {
+@Mod(modid = JsMacros.MOD_ID, version = "@VERSION@", guiFactory = "xyz.wagyourtail.jsmacros.client.JsMacrosModConfigFactory")
+public class JsMacros {
+    public static final KeyBinding keyBinding = new KeyBinding("jsmacros.menu", Keyboard.KEY_K, "jsmacros.title");
     public static final String MOD_ID = "jsmacros";
     public static final Logger LOGGER  = LogManager.getLogger();
-    public static KeyBinding keyBinding = new KeyBinding("jsmacros.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, "jsmacros.title");
     public static BaseScreen prevScreen;
-    protected static final File configFolder = new File(FabricLoader.getInstance().getConfigDir().toFile(), "jsMacros");
+    protected static final File configFolder = new File(Loader.instance().getConfigDir(), "jsMacros");
     
     public static final Core core = Core.createInstance(EventRegistry::new, Profile::new, configFolder, new File(configFolder, "Macros"), LOGGER);
     
-    @Override
-    public void onInitializeClient() {
+    @Mod.EventHandler
+    public void onInitializeClient(FMLInitializationEvent event) {
         try {
             core.config.addOptions("client", ClientConfigV2.class);
         } catch (IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
-        KeyBindingHelper.registerKeyBinding(keyBinding);
+        
+        ClientRegistry.registerKeyBinding(JsMacros.keyBinding);
         prevScreen = new KeyMacrosScreen(null);
         
         Thread t = new Thread(() -> {
@@ -57,96 +58,57 @@ public class JsMacros implements ClientModInitializer {
 
         // Init MovementQueue
         MovementQueue.clear();
-    }
-
-    static public Text getKeyText(String translationKey) {
-        try {
-            return new LiteralText(getLocalizedName(InputUtil.fromName(translationKey)));
-        } catch(Exception e) {
-            return new LiteralText(translationKey);
-        }
+        
+        FakeFabricLoader.instance.loadEntries();
+        MinecraftForge.EVENT_BUS.register(new ForgeEventListener());
     }
     
-    static public String getScreenName(Screen s) {
+    static public String getScreenName(GuiScreen s) {
         if (s == null) return null;
-        if (s instanceof ContainerScreen) {
+        if (s instanceof GuiContainer) {
             //add more ?
-            if (s instanceof GenericContainerScreen) {
-                return String.format("%d Row Chest", ((GenericContainerScreen) s).getContainer().getRows());
-            } else if (s instanceof Generic3x3ContainerScreen) {
+            if (s instanceof GuiChest) {
+                return String.format("%d Row Chest", ((GuiChest) s).inventorySlots.getInventory().size() / 9);
+            } else if (s instanceof GuiDispenser) {
                 return "3x3 Container";
-            } else if (s instanceof AnvilScreen) {
+            } else if (s instanceof GuiRepair) {
                 return "Anvil";
-            } else if (s instanceof BeaconScreen) {
+            } else if (s instanceof GuiBeacon) {
                 return "Beacon";
-            } else if (s instanceof BlastFurnaceScreen) {
-                return "Blast Furnace";
-            } else if (s instanceof BrewingStandScreen) {
+            } else if (s instanceof GuiBrewingStand) {
                 return "Brewing Stand";
-            } else if (s instanceof CraftingTableScreen) {
+            } else if (s instanceof GuiCrafting) {
                 return "Crafting Table";
-            } else if (s instanceof EnchantingScreen) {
+            } else if (s instanceof GuiEnchantment) {
                 return "Enchanting Table";
-            } else if (s instanceof FurnaceScreen) {
+            } else if (s instanceof GuiFurnace) {
                 return "Furnace";
-            } else if (s instanceof GrindstoneScreen) {
-                return "Grindstone";
-            } else if (s instanceof HopperScreen) {
+            } else if (s instanceof GuiHopper) {
                 return "Hopper";
-            } else if (s instanceof LoomScreen) {
-                return "Loom";
-            } else if (s instanceof MerchantScreen) {
+            } else if (s instanceof GuiMerchant) {
                 return "Villager";
-            } else if (s instanceof ShulkerBoxScreen) {
-                return "Shulker Box";
-            } else if (s instanceof SmokerScreen) {
-                return "Smoker";
-            } else if (s instanceof CartographyTableScreen) {
-                return "Cartography Table";
-            } else if (s instanceof StonecutterScreen) {
-                return "Stonecutter";
-            } else if (s instanceof InventoryScreen) {
+            } else if (s instanceof GuiInventory) {
                 return "Survival Inventory";
-            } else if (s instanceof HorseScreen) {
+            } else if (s instanceof GuiScreenHorseInventory) {
                 return "Horse";
-            } else if (s instanceof CreativeInventoryScreen) {
+            } else if (s instanceof GuiContainerCreative) {
                 return "Creative Inventory";
             } else {
                 return s.getClass().getName();
             }
-        } else if (s instanceof ChatScreen) {
+        } else if (s instanceof GuiChat) {
             return "Chat";
         }
-        Text t = s.getTitle();
-        String ret = "";
-        if (t != null) ret = t.getString();
-        if (ret.equals("")) ret = "unknown";
-        return ret;
+        return s.getClass().getTypeName();
     }
     
-    @Deprecated
-    static public String getLocalizedName(InputUtil.KeyCode keyCode) {
-        String string = keyCode.getName();
-        int i = keyCode.getKeyCode();
-        String string2 = null;
-        switch(keyCode.getCategory()) {
-            case KEYSYM:
-                string2 = InputUtil.getKeycodeName(i);
-                break;
-            case SCANCODE:
-                string2 = InputUtil.getScancodeName(i);
-                break;
-            case MOUSE:
-                String string3 = I18n.translate(string);
-                string2 = Objects.equals(string3, string) ? I18n.translate(InputUtil.Type.MOUSE.getName(), i + 1) : string3;
-        }
-    
-        return string2 == null ? I18n.translate(string) : string2;
+    static public String getLocalizedName(int keyCode) {
+        return GameSettings.getKeyDisplayString(keyCode);
      }
     
     @Deprecated
-    static public MinecraftClient getMinecraft() {
-        return MinecraftClient.getInstance();
+    static public Minecraft getMinecraft() {
+        return Minecraft.getMinecraft();
     }
     
 
@@ -164,5 +126,32 @@ public class JsMacros implements ClientModInitializer {
             a[i-start] = i;
         }
         return a;
+    }
+    
+    public static void openFile(File p_175282_1_)
+    {
+        try
+        {
+            Class<?> oclass = Class.forName("java.awt.Desktop");
+            Object object = oclass.getMethod("getDesktop", new Class[0]).invoke(null);
+            oclass.getMethod("open", File.class).invoke(object, p_175282_1_);
+        }
+        catch (Throwable throwable)
+        {
+            LOGGER.error("Couldn't open link", throwable);
+        }
+    }
+    
+    public static void openURI(URI p_175282_1_) {
+        try
+        {
+            Class<?> oclass = Class.forName("java.awt.Desktop");
+            Object object = oclass.getMethod("getDesktop", new Class[0]).invoke(null);
+            oclass.getMethod("browse", URI.class).invoke(object, p_175282_1_);
+        }
+        catch (Throwable throwable)
+        {
+            LOGGER.error("Couldn't open link", throwable);
+        }
     }
 }

@@ -1,18 +1,11 @@
 package xyz.wagyourtail.jsmacros.client.mixins.access;
 
-import com.google.common.collect.ImmutableList;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.AbstractParentElement;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Text;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.*;
+import net.minecraft.event.ClickEvent;
+import net.minecraft.util.IChatComponent;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,51 +13,63 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import xyz.wagyourtail.jsmacros.client.access.CustomClickEvent;
+import xyz.wagyourtail.jsmacros.client.access.IGuiTextField;
+import xyz.wagyourtail.jsmacros.client.access.IMouseScrolled;
 import xyz.wagyourtail.jsmacros.client.api.helpers.ButtonWidgetHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.ItemStackHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextFieldWidgetHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.PositionCommon;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.PositionCommon.Pos2D;
-import xyz.wagyourtail.jsmacros.client.api.sharedclasses.PositionCommon.Vec2D;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.RenderCommon;
 import xyz.wagyourtail.jsmacros.client.api.sharedinterfaces.IScreen;
+import xyz.wagyourtail.jsmacros.client.gui.elements.Drawable;
+import xyz.wagyourtail.jsmacros.client.gui.screens.BaseScreen;
 import xyz.wagyourtail.jsmacros.core.Core;
 import xyz.wagyourtail.jsmacros.core.MethodWrapper;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
-@Mixin(Screen.class)
-public abstract class MixinScreen extends AbstractParentElement implements IScreen {
+@Mixin(GuiScreen.class)
+public abstract class MixinScreen extends Gui implements IScreen, IMouseScrolled {
     @Unique private final Set<RenderCommon.RenderElement> elements = new LinkedHashSet<>();
+    @Unique private final Map<GuiButton, Consumer<GuiButton>> customButtons = new HashMap<>();
+    @Unique private final Set<GuiTextField> customTextFields = new LinkedHashSet<>();
     @Unique private MethodWrapper<PositionCommon.Pos2D, Integer, Object> onMouseDown;
-    @Unique private MethodWrapper<PositionCommon.Vec2D, Integer, Object> onMouseDrag;
+    @Unique private MethodWrapper<PositionCommon.Pos2D, Integer, Object> onMouseDrag;
     @Unique private MethodWrapper<PositionCommon.Pos2D, Integer, Object> onMouseUp;
     @Unique private MethodWrapper<PositionCommon.Pos2D, Double, Object> onScroll;
     @Unique private MethodWrapper<Integer, Integer, Object> onKeyPressed;
     @Unique private MethodWrapper<IScreen, Object, Object> onInit;
     @Unique private MethodWrapper<String, Object, Object> catchInit;
     @Unique private MethodWrapper<IScreen, Object, Object> onClose;
-    
+
     @Shadow public int width;
     @Shadow public int height;
-    @Shadow @Final protected Text title;
-    @Shadow protected MinecraftClient minecraft;
-    @Shadow protected TextRenderer font;
-    @Shadow @Final protected List<Element> children;
+    @Shadow protected Minecraft mc;
+    @Shadow protected FontRenderer fontRendererObj;
+    @Shadow protected List<GuiButton> buttonList;
+    @Shadow private GuiButton selectedButton;
     
-    @Shadow protected abstract <T extends AbstractButtonWidget> T addButton(T button);
-    @Shadow public abstract void onClose();
-    @Shadow protected abstract void init();
+    @Shadow public abstract void onGuiClosed();
+    @Shadow protected abstract void initGui();
+    @Shadow private static boolean isShiftKeyDown() {
+        return false;
+    }
+    @Shadow private static boolean isCtrlKeyDown() {
+        return false;
+    }
+    @Shadow private static boolean isAltKeyDown() {
+        return false;
+    }
     
-    @Shadow @Final protected List<AbstractButtonWidget> buttons;
     
-    @Shadow public abstract void tick();
-    
-    @Shadow public abstract boolean shouldCloseOnEsc();
+    @Shadow protected abstract void actionPerformed(GuiButton button) throws IOException;
     
     @Override
     public int getWidth() {
@@ -122,63 +127,69 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
 
     @Override
     public List<TextFieldWidgetHelper> getTextFields() {
-        Map<AbstractButtonWidget, TextFieldWidgetHelper> btns = new LinkedHashMap<>();
+        Map<GuiTextField, TextFieldWidgetHelper> btns = new LinkedHashMap<>();
         for (RenderCommon.RenderElement el : elements) {
             if (el instanceof TextFieldWidgetHelper) {
                 btns.put(((TextFieldWidgetHelper) el).getRaw(), (TextFieldWidgetHelper) el);
             }
         }
-        synchronized (buttons) {
-            for (AbstractButtonWidget e : buttons) {
-                if (e instanceof TextFieldWidget && !btns.containsKey(e)) {
-                    btns.put(e, new TextFieldWidgetHelper((TextFieldWidget) e));
-                }
+        Arrays.stream(this.getClass().getDeclaredFields()).filter(e -> e.getType().equals(GuiTextField.class)).map(e -> {
+            try {
+                e.setAccessible(true);
+                return (GuiTextField) e.get(this);
+            } catch (IllegalAccessException illegalAccessException) {
+                throw new RuntimeException(illegalAccessException);
             }
-        }
-        return ImmutableList.copyOf(btns.values());
+        }).forEach(e -> btns.put(e, new TextFieldWidgetHelper(e)));
+        return new ArrayList<>(btns.values());
     }
-    
+
     @Override
     public List<ButtonWidgetHelper<?>> getButtonWidgets() {
-        Map<AbstractButtonWidget, ButtonWidgetHelper<?>> btns = new LinkedHashMap<>();
+        Map<GuiButton, ButtonWidgetHelper<?>> btns = new LinkedHashMap<>();
         for (RenderCommon.RenderElement el : elements) {
             if (el instanceof ButtonWidgetHelper) {
                 btns.put(((ButtonWidgetHelper<?>) el).getRaw(), (ButtonWidgetHelper<?>) el);
             }
         }
-        synchronized (buttons) {
-            for (AbstractButtonWidget e : buttons) {
-                if (!(e instanceof TextFieldWidget) && !btns.containsKey(e)) {
+        synchronized (buttonList) {
+            for (GuiButton e : buttonList) {
+                if (!btns.containsKey(e)) {
+                    btns.put(e, new ButtonWidgetHelper<>(e));
+                }
+            }
+            for (GuiButton e : customButtons.keySet()) {
+                if (!btns.containsKey(e)) {
                     btns.put(e, new ButtonWidgetHelper<>(e));
                 }
             }
         }
-        return ImmutableList.copyOf(btns.values());
+        return new ArrayList<>(btns.values());
     }
-    
+
     @Override
     public List<RenderCommon.RenderElement> getElements() {
-        return ImmutableList.copyOf(elements);
+        return new ArrayList<>(elements);
     }
-    
+
     @Override
     public IScreen removeElement(RenderCommon.RenderElement e) {
         synchronized (elements) {
             elements.remove(e);
-            if (e instanceof ButtonWidgetHelper) children.remove(((ButtonWidgetHelper<?>) e).getRaw());
+            if (e instanceof ButtonWidgetHelper) buttonList.remove(((ButtonWidgetHelper<?>) e).getRaw());
         }
         return this;
     }
-    
+
     @Override
     public RenderCommon.RenderElement reAddElement(RenderCommon.RenderElement e) {
         synchronized (elements) {
             elements.add(e);
-            if (e instanceof ButtonWidgetHelper) children.add(((ButtonWidgetHelper<?>) e).getRaw());
+            if (e instanceof ButtonWidgetHelper) buttonList.add(((ButtonWidgetHelper<?>) e).getRaw());
         }
         return e;
     }
-    
+
     @Override
     public RenderCommon.Text addText(String text, int x, int y, int color, boolean shadow) {
         return addText(text, x, y, color, 0, shadow, 1, 0);
@@ -202,8 +213,8 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
         }
         return t;
     }
-    
-    
+
+
     @Override
     public RenderCommon.Text addText(TextHelper text, int x, int y, int color, boolean shadow) {
         return addText(text, x, y, color, 0, shadow, 1, 0);
@@ -390,7 +401,8 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
     
     @Override
     public String getTitleText() {
-        return title.getString();
+        return null;
+        //return title.getString();
     }
 
     @Override
@@ -402,7 +414,8 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
     @Override
     public ButtonWidgetHelper<?> addButton(int x, int y, int width, int height, int zIndex, String text, MethodWrapper<ButtonWidgetHelper<?>, IScreen, Object> callback) {
         AtomicReference<ButtonWidgetHelper<?>> b = new AtomicReference<>(null);
-        ButtonWidget button = new ButtonWidget(x, y, width, height, text, (btn) -> {
+        GuiButton button = new GuiButton(-999, x, y, width, height, text);
+        customButtons.put(button, (btn) -> {
             try {
                 callback.accept(b.get(), this);
             } catch (Exception e) {
@@ -412,7 +425,6 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
         b.set(new ButtonWidgetHelper<>(button, zIndex));
         synchronized (elements) {
             elements.add(b.get());
-            children.add(button);
         }
         return b.get();
     }
@@ -421,7 +433,7 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
     public IScreen removeButton(ButtonWidgetHelper<?> btn) {
         synchronized (elements) {
             elements.remove(btn);
-            this.children.remove(btn.getRaw());
+            customButtons.remove(btn.getRaw());
         }
         return this;
     }
@@ -434,9 +446,10 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
     
     @Override
     public TextFieldWidgetHelper addTextInput(int x, int y, int width, int height, int zIndex, String message, MethodWrapper<String, IScreen, Object> onChange) {
-        TextFieldWidget field = new TextFieldWidget(this.font, x, y, width, height, message);
+        GuiTextField field = new GuiTextField(-999, this.fontRendererObj, x, y, width, height);
+        field.setText(message);
         if (onChange != null) {
-            field.setChangedListener(str -> {
+            ((IGuiTextField)field).setOnChange(str -> {
                 try {
                     onChange.accept(str, this);
                 } catch (Exception e) {
@@ -447,7 +460,7 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
         TextFieldWidgetHelper w = new TextFieldWidgetHelper(field, zIndex);
         synchronized (elements) {
             elements.add(w);
-            children.add(field);
+            customTextFields.add(w.getRaw());
         }
         return w;
     }
@@ -455,16 +468,21 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
     @Override
     public IScreen removeTextInput(TextFieldWidgetHelper inp) {
         synchronized (elements) {
-            elements.remove(inp);
-            children.remove(inp.getRaw());
+            if (customTextFields.contains(inp.getRaw())) {
+                elements.remove(inp);
+                customTextFields.remove(inp);
+            }
         }
         return this;
     }
 
     @Override
     public void close() {
-        onClose();
-        
+        if ((Object)this instanceof BaseScreen) {
+            ((BaseScreen)(Object) this).onClose();
+        }
+        onGuiClosed();
+
     }
 
     @Override
@@ -474,7 +492,7 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
     }
 
     @Override
-    public IScreen setOnMouseDrag(MethodWrapper<Vec2D, Integer, Object> onMouseDrag) {
+    public IScreen setOnMouseDrag(MethodWrapper<Pos2D, Integer, Object> onMouseDrag) {
         this.onMouseDrag = onMouseDrag;
         return this;
     }
@@ -514,10 +532,10 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
         this.onClose = onClose;
         return this;
     }
-    
+
     @Override
     public IScreen reloadScreen() {
-        minecraft.openScreen((Screen) (Object) this);
+        mc.displayGuiScreen((GuiScreen) (Object) this);
         return this;
     }
 
@@ -531,66 +549,80 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "render")
+    @Inject(at = @At("RETURN"), method = "drawScreen")
     public void render(int mouseX, int mouseY, float delta, CallbackInfo info) {
         onRenderInternal(mouseX, mouseY, delta);
     }
     
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    @Inject(at = @At("RETURN"), method = "handleMouseInput", locals = LocalCapture.CAPTURE_FAILHARD)
+    public void onMouseEvent(CallbackInfo ci, int i, int j) {
+        int dw = Mouse.getEventDWheel();
+        if (dw != 0) {
+            mouseScrolled(i, j, (int) (dw / 60D));
+            if (onScroll != null) try {
+                onScroll.accept(new PositionCommon.Pos2D(i, j), (double) dw / 60D);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Inject(at = @At("HEAD"), method = "mouseClicked")
+    public void onMouseClicked(int mouseX, int mouseY, int button, CallbackInfo info) {
         if (onMouseDown != null) try {
             onMouseDown.accept(new PositionCommon.Pos2D(mouseX, mouseY), button);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return super.mouseClicked(mouseX, mouseY, button);
     }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    
+    @Inject(at = @At("HEAD"), method = "mouseClickMove")
+    public void onMouseDragged(int mouseX, int mouseY, int button, long time, CallbackInfo ci) {
         if (onMouseDrag != null) try {
-            onMouseDrag.accept(new PositionCommon.Vec2D(mouseX, mouseY, deltaX, deltaY), button);
+            onMouseDrag.accept(new PositionCommon.Pos2D(mouseX, mouseY), button);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    @Inject(at = @At("HEAD"), method = "mouseReleased")
+    public void onMouseReleased(int mouseX, int mouseY, int button, CallbackInfo ci) {
         if (onMouseUp != null) try {
             onMouseUp.accept(new PositionCommon.Pos2D(mouseX, mouseY), button);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    @Inject(at = @At("HEAD"), method = "keyPressed")
-    public void keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> info) {
-        if (onKeyPressed != null) try {
-            onKeyPressed.accept(keyCode, modifiers);
+    @Inject(at = @At("HEAD"), method = "handleKeyboardInput")
+    public void onKeyPressed(CallbackInfo info) {
+        if (Keyboard.getEventKeyState() && onKeyPressed != null) try {
+            onKeyPressed.accept(Keyboard.getEventKey(), createModifiers());
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        if (onScroll != null) try {
-            onScroll.accept(new PositionCommon.Pos2D(mouseX, mouseY), amount);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return super.mouseScrolled(mouseX, mouseY, amount);
     }
     
-    @Inject(at = @At("RETURN"), method = "init()V")
+    @Unique
+    private static int createModifiers() {
+        int i = 0;
+        if (isShiftKeyDown()) i |= 1;
+        if (isCtrlKeyDown()) i |= 2;
+        if (isAltKeyDown()) i |= 4;
+        return i;
+    }
+    
+    @Override
+    public boolean mouseScrolled(int mouseX, int mouseY, int amount) {
+        return false;
+    }
+
+    @Inject(at = @At("RETURN"), method = "initGui()V")
     protected void init(CallbackInfo info) {
         synchronized (elements) {
             elements.clear();
+            customButtons.clear();
         }
-        minecraft.keyboard.enableRepeatEvents(true);
         if (onInit != null) {
             try {
                 onInit.accept(this);
@@ -605,21 +637,46 @@ public abstract class MixinScreen extends AbstractParentElement implements IScre
         }
     }
     
-    @Inject(at = @At("RETURN"), method = "removed")
-    public void removed(CallbackInfo info) {
-        if (onClose != null) {
-            try {
-                onClose.accept(this);
-            } catch (Exception e) {
-                Core.instance.profile.logError(e);
+    @Inject(at = @At("RETURN"), method = "mouseClicked")
+    public void onMouseClick(int mouseX, int mouseY, int mouseButton, CallbackInfo ci) throws IOException {
+        if (mouseButton == 0) {
+            for (GuiButton btn : customButtons.keySet()) {
+                if (btn.mousePressed(this.mc, mouseX, mouseY)) {
+                    selectedButton = btn;
+                    customButtons.get(btn).accept(btn);
+                }
+            }
+            for (GuiTextField field : customTextFields) {
+                field.mouseClicked(mouseX, mouseY, mouseButton);
             }
         }
     }
+
+    @Override
+    public GuiButton getFocused() {
+        return selectedButton;
+    }
+
+    @Override
+    public void clickBtn(GuiButton btn) throws IOException {
+        GuiButton prev = selectedButton;
+        if (buttonList.contains(btn)) {
+            selectedButton = btn;
+            btn.playPressSound(this.mc.getSoundHandler());
+            actionPerformed(btn);
+            selectedButton = prev;
+        }
+    }
     
+    @Override
+    public  MethodWrapper<IScreen, Object, Object> getOnClose() {
+        return onClose;
+    }
+
     //TODO: switch to enum extention with mixin 9.0 or whenever Mumfrey gets around to it
-    @Inject(at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", remap = false), method = "handleComponentClicked", cancellable = true)
-    public void handleCustomClickEvent(Text t, CallbackInfoReturnable<Boolean> cir) {
-        ClickEvent clickEvent = t.getStyle().getClickEvent();
+    @Inject(at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;)V", remap = false), method = "handleComponentClick", cancellable = true)
+    public void handleCustomClickEvent(IChatComponent t, CallbackInfoReturnable<Boolean> cir) {
+        ClickEvent clickEvent = t.getChatStyle().getChatClickEvent();
         if (clickEvent instanceof CustomClickEvent) {
             ((CustomClickEvent) clickEvent).getEvent().run();
             cir.setReturnValue(true);

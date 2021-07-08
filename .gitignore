@@ -1,26 +1,28 @@
-# gradle
-
-.gradle/
-build/
-out/
-build/classes/
-dist/
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
 
 # idea
-
-.idea/
-*.iml
+out
 *.ipr
 *.iws
+*.iml
+.idea
 
-# vscode
+# gradle
+build
+.gradle
 
 .settings/
 .vscode/
 bin/
 .classpath
-.project
 eclipse
+.project
 
 # fabric
 
@@ -31,3 +33,5 @@ run/
 
 doc/
 *.log
+
+dist

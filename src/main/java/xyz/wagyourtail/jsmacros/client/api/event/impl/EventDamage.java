@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.event.impl;
 
-import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.util.DamageSource;
 import xyz.wagyourtail.jsmacros.client.api.helpers.EntityHelper;
 import xyz.wagyourtail.jsmacros.core.event.BaseEvent;
 import xyz.wagyourtail.jsmacros.core.event.Event;
@@ -17,9 +17,9 @@ public class EventDamage implements BaseEvent {
     public final float change;
     
     public EventDamage(DamageSource source, float health, float change) {
-        if (source.getAttacker() == null) this.attacker = null;
-        else this.attacker = EntityHelper.create(source.getAttacker());
-        this.source = source.getName();
+        if (source.getSourceOfDamage() == null) this.attacker = null;
+        else this.attacker = EntityHelper.create(source.getSourceOfDamage());
+        this.source = source.getDamageType();
         this.health = health;
         this.change = change;
         

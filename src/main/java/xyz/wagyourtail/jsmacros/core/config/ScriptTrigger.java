@@ -1,11 +1,7 @@
 package xyz.wagyourtail.jsmacros.core.config;
 
-import com.google.gson.annotations.SerializedName;
-
 public class ScriptTrigger {
-    @SerializedName(value = "triggerType", alternate = "type")
     public TriggerType triggerType;
-    @SerializedName(value = "event", alternate = "eventkey")
     public String event;
     public String scriptFile;
     public boolean enabled;

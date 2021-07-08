@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.ScoreboardPlayerScore;
+import net.minecraft.scoreboard.Score;
+import net.minecraft.scoreboard.ScoreObjective;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
 import java.util.LinkedHashMap;
@@ -12,9 +12,9 @@ import java.util.Map;
  * @since 1.2.9
  */
 @SuppressWarnings("unused")
-public class ScoreboardObjectiveHelper extends BaseHelper<ScoreboardObjective> {
+public class ScoreboardObjectiveHelper extends BaseHelper<ScoreObjective> {
     
-    public ScoreboardObjectiveHelper(ScoreboardObjective o) {
+    public ScoreboardObjectiveHelper(ScoreObjective o) {
         super(o);
     }
     
@@ -23,8 +23,8 @@ public class ScoreboardObjectiveHelper extends BaseHelper<ScoreboardObjective> {
      */
     public Map<String, Integer> getPlayerScores() {
         Map<String, Integer> scores  = new LinkedHashMap<>();
-        for (ScoreboardPlayerScore pl : base.getScoreboard().getAllPlayerScores(base)) {
-            scores.put(pl.getPlayerName(), pl.getScore());
+        for (Score pl : base.getScoreboard().getSortedScores(base)) {
+            scores.put(pl.getPlayerName(), pl.getScorePoints());
         }
         return scores;
     }

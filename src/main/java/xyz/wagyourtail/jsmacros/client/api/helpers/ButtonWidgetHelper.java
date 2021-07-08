@@ -1,22 +1,24 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.text.LiteralText;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.util.ChatComponentText;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
+import xyz.wagyourtail.jsmacros.client.api.sharedinterfaces.IScreen;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.RenderCommon;
 import xyz.wagyourtail.jsmacros.core.Core;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
+import java.io.IOException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Wagyourtail
  * @since 1.0.5
  */
 @SuppressWarnings("unused")
-public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelper<T> implements RenderCommon.RenderElement {
+public class ButtonWidgetHelper<T extends GuiButton> extends BaseHelper<T> implements RenderCommon.RenderElement {
     public int zIndex;
     
     public ButtonWidgetHelper(T btn) {
@@ -34,7 +36,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return the {@code x} coordinate of the button.
      */
     public int getX() {
-        return base.x;
+        return base.xPosition;
     }
 
     /**
@@ -42,7 +44,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return the {@code y} coordinate of the button.
      */
     public int getY() {
-        return base.y;
+        return base.yPosition;
     }
     
     /**
@@ -55,8 +57,8 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return
      */
     public ButtonWidgetHelper<T> setPos(int x, int y) {
-        base.x = x;
-        base.y = y;
+        base.xPosition = x;
+        base.yPosition = y;
         return this;
     }
     
@@ -66,7 +68,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return
      */
     public int getWidth() {
-        return base.getWidth();
+        return base.getButtonWidth();
     }
     
     
@@ -81,7 +83,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      */
      @Deprecated
     public ButtonWidgetHelper<T> setLabel(String label) {
-        base.setMessage(label);
+        base.displayString = label;
         return this;
     }
     
@@ -95,7 +97,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return
      */
     public ButtonWidgetHelper<T> setLabel(TextHelper helper) {
-        base.setMessage(helper.getRaw().asFormattedString());
+        base.displayString = helper.getRaw().getFormattedText();
         return this;
     }
     
@@ -105,7 +107,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return current button text.
      */
     public TextHelper getLabel() {
-        return new TextHelper(new LiteralText(base.getMessage()));
+        return new TextHelper(new ChatComponentText(base.displayString));
     }
     
     /**
@@ -114,7 +116,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return button clickable state.
      */
     public boolean getActive() {
-        return base.active;
+        return base.enabled;
     }
     
     /**
@@ -126,7 +128,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @return
      */
     public ButtonWidgetHelper<T> setActive(boolean t) {
-        base.active = t;
+        base.enabled = t;
         return this;
     }
     
@@ -147,7 +149,7 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * clicks button
      * @since 1.3.1
      */
-    public ButtonWidgetHelper<T> click() throws InterruptedException {
+    public ButtonWidgetHelper<T> click() throws InterruptedException, IOException {
         click(true);
         return this;
     }
@@ -158,24 +160,32 @@ public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelp
      * @param await should wait for button to finish clicking.
      * @since 1.3.1
      */
-    public ButtonWidgetHelper<T> click(boolean await) throws InterruptedException {
-        boolean joinedMain = MinecraftClient.getInstance().isOnThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread());
+    public ButtonWidgetHelper<T> click(boolean await) throws InterruptedException, IOException {
+        boolean joinedMain = Minecraft.getMinecraft().isCallingFromMinecraftThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread());
         if (joinedMain && await) {
             throw new IllegalThreadStateException("Attempted to wait on a thread that is currently joined!");
         }
         final Semaphore waiter = new Semaphore(await ? 0 : 1);
-        MinecraftClient.getInstance().execute(() -> {
-            base.mouseClicked(base.x, base.y, 0);
-            base.mouseReleased(base.x, base.y, 0);
+        final Minecraft mc =  Minecraft.getMinecraft();
+        AtomicReference<IOException> error = new AtomicReference<>(null);
+        mc.addScheduledTask(() -> {
+            base.mousePressed(mc, base.xPosition, base.yPosition);
+            try {
+                ((IScreen)mc.currentScreen).clickBtn(base);
+            } catch (IOException e) {
+                error.set(e);
+            }
+            base.mouseReleased(base.xPosition, base.yPosition);
             waiter.release();
         });
         waiter.acquire();
+        if (error.get() != null) throw error.get();
         return this;
     }
     
     @Override
-    public void render(int mouseX, int mouseY, float delta) {
-        base.render(mouseX, mouseY, delta);
+    public void render(int mouseX, int mouseY, float partialTicks) {
+        base.drawButton(Minecraft.getMinecraft(), mouseX, mouseY);
     }
     
     @Override

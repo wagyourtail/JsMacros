@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.api.event.impl;
 
-import net.minecraft.text.Text;
+import net.minecraft.util.IChatComponent;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
 import xyz.wagyourtail.jsmacros.core.event.BaseEvent;
 import xyz.wagyourtail.jsmacros.core.event.Event;
@@ -14,7 +14,7 @@ public class EventTitle implements BaseEvent {
     public final String type;
     public final TextHelper message;
     
-    public EventTitle(String type, Text message) {
+    public EventTitle(String type, IChatComponent message) {
         this.type = type;
         this.message = new TextHelper(message);
         

@@ -1,6 +1,6 @@
 package xyz.wagyourtail.jsmacros.client.gui.editor.highlighting;
 
-import net.minecraft.text.Text;
+import net.minecraft.util.IChatComponent;
 import org.jetbrains.annotations.NotNull;
 import xyz.wagyourtail.jsmacros.client.gui.screens.EditorScreen;
 
@@ -22,7 +22,7 @@ public abstract class AbstractRenderCodeCompiler {
     public abstract Map<String, Runnable> getRightClickOptions(int index);
     
     @NotNull
-    public abstract Text[] getRenderedText();
+    public abstract IChatComponent[] getRenderedText();
     
     @NotNull
     public abstract List<AutoCompleteSuggestion> getSuggestions();

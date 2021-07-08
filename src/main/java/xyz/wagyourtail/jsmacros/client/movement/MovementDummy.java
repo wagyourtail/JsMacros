@@ -1,95 +1,96 @@
 package xyz.wagyourtail.jsmacros.client.movement;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.*;
-import net.minecraft.entity.effect.StatusEffects;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Arm;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.potion.Potion;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import xyz.wagyourtail.jsmacros.client.api.classes.PlayerInput;
+import xyz.wagyourtail.jsmacros.client.api.helpers.ItemStackHelper;
+import xyz.wagyourtail.jsmacros.client.api.sharedclasses.PositionCommon;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
-@SuppressWarnings("EntityConstructor")
-public class MovementDummy extends LivingEntity {
+public class MovementDummy extends EntityPlayer {
 
-    private List<Vec3d> coordsHistory = new ArrayList<>();
-    private List<PlayerInput> inputs = new ArrayList<>();
-
-    // Is used for checking the depthstrider enchant
-    private Map<EquipmentSlot, ItemStack> equippedStack = new HashMap<>(6);
+    public List<PositionCommon.Pos3D> coordsHistory = new ArrayList<>();
+    private PlayerInput currentInput;
     private int jumpingCooldown;
+    private float walkSpeed;
 
-    public MovementDummy(MovementDummy player) {
-        this(player.getEntityWorld(), player.getPos(), player.getVelocity(), player.getBoundingBox(), player.onGround, player.isSprinting(), player.isSneaking());
-        this.inputs = new ArrayList<>(player.getInputs());
-        this.coordsHistory = new ArrayList<>(player.getCoordsHistory());
-        this.jumpingCooldown = player.jumpingCooldown;
-        this.equippedStack = player.equippedStack;
+    private ItemStack heldItem = null;
+
+    private final List<ItemStack> armorItems = new ArrayList<>(4);
+    private final List<ItemStack> equippedStack = new ArrayList<>(5);
+
+    public MovementDummy(World wasd) {
+        super(wasd, null);
+        throw new RuntimeException("Shouldn't be called like this");
     }
 
-    public MovementDummy(ClientPlayerEntity player) {
-        this(player.getEntityWorld(), player.getPos(), player.getVelocity(), player.getBoundingBox(), player.onGround, player.isSprinting(), player.isSneaking());
-        for (EquipmentSlot value : EquipmentSlot.values()) {
-            equippedStack.put(value, player.getEquippedStack(value).copy());
+    public MovementDummy(EntityPlayerSP player) {
+        this(player.worldObj, new PositionCommon.Pos3D(player.posX, player.posY, player.posZ), new PositionCommon.Pos3D(player.motionX, player.motionY, player.motionZ), player.getEntityBoundingBox(), player.onGround, player.isSprinting(), player.isSneaking());
+        this.walkSpeed = player.capabilities.getWalkSpeed();
+        heldItem = player.getHeldItem();
+        for (int i = 0; i < 4; ++i) {
+            ItemStack armor = player.getCurrentArmor(i);
+            if (armor != null) armor = armor.copy();
+            this.armorItems.add(armor);
+        }
+        for (int i = 0; i < 5; ++i) {
+            ItemStack equipment = player.getEquipmentInSlot(i);
+            if (equipment != null) equipment = equipment.copy();
+            this.equippedStack.add(equipment);
         }
     }
 
-    public MovementDummy(World world, Vec3d pos, Vec3d velocity, Box hitBox, boolean onGround, boolean isSprinting, boolean isSneaking) {
-        super(EntityType.PLAYER, world);
-        this.x = pos.getX();
-        this.y = pos.getY();
-        this.z = pos.getZ();
-        this.setVelocity(velocity);
-        this.setBoundingBox(hitBox);
+    public MovementDummy(World world, PositionCommon.Pos3D pos, PositionCommon.Pos3D velocity, AxisAlignedBB hitBox, boolean onGround, boolean isSprinting, boolean isSneaking) {
+        super(world, new GameProfile(UUID.randomUUID(), "dummy"));
+        this.setPosition(pos.getX(), pos.getY(), pos.getZ());
+        this.setVelocity(velocity.x, velocity.y, velocity.z);
+        this.setEntityBoundingBox(hitBox);
         this.setSprinting(isSprinting);
         this.setSneaking(isSneaking);
         this.stepHeight = 0.6F;
         this.onGround = onGround;
-        this.coordsHistory.add(this.getPos());
-
-        for (EquipmentSlot value : EquipmentSlot.values()) {
-            equippedStack.put(value, new ItemStack(null));
+        this.coordsHistory.add(pos);
+        for (int i = 0; i < 4; ++i) {
+            this.armorItems.add(null);
+        }
+        for (int i = 0; i < 5; ++i) {
+            equippedStack.add(null);
         }
     }
 
-    public List<Vec3d> getCoordsHistory() {
-        return coordsHistory;
-    }
+    public PositionCommon.Pos3D applyInput(PlayerInput input) {
+        this.currentInput = input.clone();
+        this.rotationYaw = currentInput.yaw;
 
-    public List<PlayerInput> getInputs() {
-        return inputs;
-    }
-
-    public Vec3d applyInput(PlayerInput input) {
-        inputs.add(input); // We use this and not the clone, since the clone may be modified?
-        PlayerInput currentInput = input.clone();
-        this.yaw = currentInput.yaw;
-
-        Vec3d velocity = this.getVelocity();
-        double velX = velocity.x;
-        double velY = velocity.y;
-        double velZ = velocity.z;
-        if (Math.abs(velocity.x) < 0.003D) {
+        double velX = this.motionX;
+        double velY = this.motionY;
+        double velZ = this.motionZ;
+        if (Math.abs(this.motionX) < 0.003D) {
             velX = 0.0D;
         }
-        if (Math.abs(velocity.y) < 0.003D) {
+
+        if (Math.abs(this.motionY) < 0.003D) {
             velY = 0.0D;
         }
-        if (Math.abs(velocity.z) < 0.003D) {
+
+        if (Math.abs(this.motionZ) < 0.003D) {
             velZ = 0.0D;
         }
         this.setVelocity(velX, velY, velZ);
 
         /** Sneaking start **/
-        if (this.isSneaking() && this.wouldPoseNotCollide(EntityPose.SNEAKING)) {
+        if (this.isSneaking()) {
             // Yeah this looks dumb, but that is the way minecraft does it
             currentInput.movementSideways = (float) ((double) currentInput.movementSideways * 0.3D);
             currentInput.movementForward = (float) ((double) currentInput.movementForward * 0.3D);
@@ -99,11 +100,11 @@ public class MovementDummy extends LivingEntity {
 
         /** Sprinting start **/
         boolean hasHungerToSprint = true;
-        if (!this.isSprinting() && !currentInput.sneaking && hasHungerToSprint && !this.hasStatusEffect(StatusEffects.BLINDNESS) && currentInput.sprinting) {
+        if (!this.isSprinting() && !this.currentInput.sneaking && hasHungerToSprint && this.getActivePotionEffect(Potion.blindness) != null && this.currentInput.sprinting) {
             this.setSprinting(true);
         }
 
-        if (this.isSprinting() && (currentInput.movementForward <= 1.0E-5F || this.horizontalCollision)) {
+        if (this.isSprinting() && (this.currentInput.movementForward <= 1.0E-5F || this.isCollidedHorizontally)) {
             this.setSprinting(false);
         }
         /** Sprinting end **/
@@ -121,14 +122,75 @@ public class MovementDummy extends LivingEntity {
         } else {
             this.jumpingCooldown = 0;
         }
-        /** Juming END **/
+        /** Jumping END **/
 
-        this.travel(new Vec3d(currentInput.movementSideways * 0.98, 0.0, currentInput.movementForward * 0.98));
+        this.moveStrafing = this.currentInput.movementSideways;
+        this.moveForward = this.currentInput.movementForward;
 
-        /* flyingSpeed only gets set after travel */
-//        this.flyingSpeed = this.isSprinting() ? 0.026F : 0.02F;
+        PositionCommon.Pos3D velocity = movementInputToVelocity(new PositionCommon.Pos3D(this.moveForward, 0, this.moveStrafing), walkSpeed, rotationYaw);
+        motionX += velocity.x;
+        motionY += velocity.y;
+        motionZ += velocity.z;
 
-        return this.getPos();
+        this.moveEntityWithHeading(this.moveStrafing, this.moveForward);
+        return new PositionCommon.Pos3D(this.posX, this.posY, this.posZ);
+    }
+
+    private static PositionCommon.Pos3D movementInputToVelocity(PositionCommon.Pos3D movementInput, float speed, float yaw) {
+        double d = movementInput.toVector().getMagnitude();
+        d = d * d;
+        if (d < 1.0E-7D) {
+            return PositionCommon.Pos3D.ZERO;
+        } else {
+            PositionCommon.Pos3D vec3d = (d > 1.0D ? normalize(movementInput) : movementInput).multiply(new PositionCommon.Pos3D(speed, speed, speed));
+            float f = MathHelper.sin(yaw * 0.017453292F);
+            float g = MathHelper.cos(yaw * 0.017453292F);
+            return new PositionCommon.Pos3D(vec3d.x * (double)g - vec3d.z * (double)f, vec3d.y, vec3d.z * (double)g + vec3d.x * (double)f);
+        }
+    }
+
+    private static PositionCommon.Pos3D normalize(PositionCommon.Pos3D start) {
+        double d = MathHelper.sqrt_double(start.x * start.x + start.y * start.y + start.z * start.z);
+        return d < 1.0E-4D ? PositionCommon.Pos3D.ZERO : new PositionCommon.Pos3D(start.x / d, start.y / d, start.z / d);
+    }
+
+    @Override
+    public boolean isServerWorld() {
+        return false;
+    }
+
+    @Override
+    public ItemStack getHeldItem() {
+        return heldItem;
+    }
+
+    @Override
+    public ItemStack getEquipmentInSlot(int slotIn) {
+        return equippedStack.get(slotIn);
+    }
+
+    @Override
+    public ItemStack getCurrentArmor(int slotIn) {
+        return armorItems.get(slotIn);
+    }
+
+    @Override
+    public void setCurrentItemOrArmor(int slotIn, ItemStack stack) {
+
+    }
+
+    @Override
+    public boolean isSpectator() {
+        return false;
+    }
+
+    @Override
+    public void addMovementStat(double p_71000_1_, double p_71000_3_, double p_71000_5_) {
+    }
+
+    @Override
+    public ItemStack[] getInventory() {
+        return new ItemStack[0];
     }
 
     /**
@@ -136,57 +198,12 @@ public class MovementDummy extends LivingEntity {
      * in LivingEntity is checking if we are a PlayerEntity, we want to apply the outcome of this check,
      * so this is why we need to set the y-velocity to 0.<p>
      */
-    @Override
-    public void move(MovementType mt, Vec3d velocity) {
-        if (this.isClimbing() && velocity.getY() < 0.0D && this.method_16212().getBlock() != Blocks.SCAFFOLDING && this.isSneaking()) {
-            this.setVelocity(velocity.getX(), 0, velocity.getZ());
-        }
-        super.move(mt, this.getVelocity());
-    }
+//    @Override
+//    public Vec3d method_26318(Vec3d movementInput, float f) {
+//        if (this.isClimbing() && this.getVelocity().getY() < 0.0D && !this.getBlockState().isOf(Blocks.SCAFFOLDING) && this.isHoldingOntoLadder()) {
+//            this.setVelocity(this.getVelocity().getX(), 0, this.getVelocity().getZ());
+//        }
+//        return super.method_26318(movementInput, f);
+//    }
 
-    @Override
-    protected boolean canClimb() {
-        return !this.onGround || !this.isSneaking();
-    }
-
-    @Override
-    public boolean canMoveVoluntarily() {
-        return true;
-    }
-
-    @Override
-    public void setSprinting(boolean sprinting) {
-        super.setSprinting(sprinting);
-        this.setMovementSpeed(sprinting ? 0.13F : 0.1F);
-    }
-
-    @Override
-    public ItemStack getMainHandStack() {
-        return new ItemStack(Items.AIR);
-    }
-
-    @Override
-    public Iterable<ItemStack> getArmorItems() {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public ItemStack getEquippedStack(EquipmentSlot slot) {
-        return equippedStack.get(slot);
-    }
-
-    @Override
-    public void equipStack(EquipmentSlot slot, ItemStack stack) {
-    }
-
-    @Override
-    public Arm getMainArm() {
-        // This is just for rendering
-        return Arm.RIGHT;
-    }
-
-    @Override
-    public MovementDummy clone() {
-        return new MovementDummy(this);
-    }
 }

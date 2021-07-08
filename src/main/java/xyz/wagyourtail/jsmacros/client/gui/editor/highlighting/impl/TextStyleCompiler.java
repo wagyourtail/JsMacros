@@ -2,8 +2,8 @@ package xyz.wagyourtail.jsmacros.client.gui.editor.highlighting.impl;
 
 import io.noties.prism4j.AbsVisitor;
 import io.noties.prism4j.Prism4j;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.wagyourtail.jsmacros.client.access.IStyle;
@@ -14,14 +14,16 @@ import java.util.Map;
 import java.util.Optional;
 
 public class TextStyleCompiler extends AbsVisitor {
-    private final Style defaultStyle;
+    private final ChatStyle defaultStyle;
     private final Map<String, short[]> themeData;
-    private final List<LiteralText> result = new LinkedList<>();
+    private final List<ChatComponentText> result = new LinkedList<>();
     
-    public TextStyleCompiler(Style defaultStyle, Map<String, short[]> themeData) {
+    public TextStyleCompiler(ChatStyle defaultStyle, Map<String, short[]> themeData) {
         this.defaultStyle = defaultStyle;
         this.themeData = themeData;
-        result.add((LiteralText) new LiteralText("").setStyle(defaultStyle.copy()));
+        ChatComponentText component;
+        result.add(component = new ChatComponentText(""));
+        component.setChatStyle(defaultStyle.createDeepCopy());
     }
     
     @Override
@@ -29,23 +31,28 @@ public class TextStyleCompiler extends AbsVisitor {
         String[] lines = text.literal().replaceAll("\t", "    ").split("\r\n|\n", -1);
         int i = 0;
         while (i < lines.length) {
-            result.get(result.size() - 1).append(new LiteralText(lines[i]).setStyle(defaultStyle.copy()));
-            if (++i < lines.length) result.add((LiteralText) new LiteralText("").setStyle(defaultStyle.copy()));
+            ChatComponentText component;
+            result.get(result.size() - 1).appendSibling(component = new ChatComponentText(lines[i]));
+            component.setChatStyle(defaultStyle.createDeepCopy());
+            if (++i < lines.length) {
+                result.add(component = new ChatComponentText(""));
+                component.setChatStyle(defaultStyle.createDeepCopy());
+            }
         }
     }
     
     @Override
     protected void visitSyntax(@NotNull Prism4j.Syntax syntax) {
         Optional<Integer> update = colorForSyntax(syntax.type(), syntax.alias());
-        Style newStyle = update.isPresent() ? ((IStyle)defaultStyle.copy()).setCustomColor(update.get()) : defaultStyle.copy();
+        ChatStyle newStyle = update.isPresent() ? ((IStyle)defaultStyle.createDeepCopy()).setCustomColor(update.get()) : defaultStyle.createDeepCopy();
         final TextStyleCompiler child = new TextStyleCompiler(newStyle, themeData);
         child.visit(syntax.children());
         appendChildResult(child.getResult());
     }
     
-    protected void appendChildResult(List<LiteralText> childResult) {
-        LiteralText first = childResult.remove(0);
-        result.get(result.size() - 1).append(first);
+    protected void appendChildResult(List<ChatComponentText> childResult) {
+        ChatComponentText first = childResult.remove(0);
+        result.get(result.size() - 1).appendSibling(first);
         result.addAll(childResult);
     }
     
@@ -56,7 +63,7 @@ public class TextStyleCompiler extends AbsVisitor {
         return val;
     }
     
-    public List<LiteralText> getResult() {
+    public List<ChatComponentText> getResult() {
         return result;
     }
     

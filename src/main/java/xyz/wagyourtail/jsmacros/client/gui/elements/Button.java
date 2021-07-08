@@ -1,21 +1,22 @@
 package xyz.wagyourtail.jsmacros.client.gui.elements;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.AbstractPressableButtonWidget;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IChatComponent;
 
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class Button extends AbstractPressableButtonWidget {
-    protected final TextRenderer textRenderer;
+public class Button extends GuiButton {
+    protected final FontRenderer textRenderer;
     protected int color;
     protected int borderColor;
     protected int hilightColor;
     protected int textColor;
-    protected List<Text> textLines;
+    protected List<IChatComponent> textLines;
     protected int visibleLines;
     protected int verticalCenter;
     public boolean horizCenter = true;
@@ -23,8 +24,8 @@ public class Button extends AbstractPressableButtonWidget {
     public boolean hovering = false;
     public boolean forceHover = false;
     
-    public Button(int x, int y, int width, int height, TextRenderer textRenderer, int color, int borderColor, int hilightColor, int textColor, Text message, Consumer<Button> onPress) {
-        super(x, y, width, height, message.asFormattedString());
+    public Button(int x, int y, int width, int height, FontRenderer textRenderer, int color, int borderColor, int hilightColor, int textColor, IChatComponent message, Consumer<Button> onPress) {
+        super(1, x, y, width, height, message.getFormattedText());
         this.textRenderer = textRenderer;
         this.color = color;
         this.borderColor = borderColor;
@@ -35,8 +36,8 @@ public class Button extends AbstractPressableButtonWidget {
     }
     
     public Button setPos(int x, int y, int width, int height) {
-        this.x = x;
-        this.y = y;
+        this.xPosition = x;
+        this.yPosition = y;
         this.width = width;
         this.height = height;
         return this;
@@ -46,15 +47,15 @@ public class Button extends AbstractPressableButtonWidget {
         return this.textLines.size() > this.visibleLines;
     }
     
-    protected void setMessageSuper(Text message) {
-        super.setMessage(message.asFormattedString());
+    protected void setMessageSuper(IChatComponent message) {
+        displayString = message.getFormattedText();
     }
     
-    public void setMessage(Text message) {
-        super.setMessage(message.asFormattedString());
-        this.textLines = textRenderer.wrapStringToWidthAsList(message.asFormattedString(), width - 4).stream().map(LiteralText::new).collect(Collectors.toList());
-        this.visibleLines = Math.min(Math.max((height - 2) / textRenderer.fontHeight, 1), textLines.size());
-        this.verticalCenter = ((height - 4) - (visibleLines * textRenderer.fontHeight)) / 2;
+    public void setMessage(IChatComponent message) {
+        displayString = message.getFormattedText();
+        this.textLines = textRenderer.listFormattedStringToWidth(message.getFormattedText(), width - 4).stream().map(ChatComponentText::new).collect(Collectors.toList());
+        this.visibleLines = Math.min(Math.max((height - 2) / textRenderer.FONT_HEIGHT, 1), textLines.size());
+        this.verticalCenter = ((height - 4) - (visibleLines * textRenderer.FONT_HEIGHT)) / 2;
     }
     
     public void setColor(int color) {
@@ -67,42 +68,40 @@ public class Button extends AbstractPressableButtonWidget {
     
     protected void renderMessage() {
         for (int i = 0; i < visibleLines; ++i) {
-            int w = textRenderer.getStringWidth(textLines.get(i).asFormattedString());
-            textRenderer.draw(textLines.get(i).asFormattedString(), horizCenter ? x + width / 2F - w / 2F : x + 1, y + 2 + verticalCenter + (i * textRenderer.fontHeight), textColor);
+            int w = textRenderer.getStringWidth(textLines.get(i).getFormattedText());
+            textRenderer.drawString(textLines.get(i).getFormattedText(), horizCenter ? (int) (xPosition + width / 2F - w / 2F) : xPosition + 1, yPosition + 2 + verticalCenter + (i * textRenderer.FONT_HEIGHT), textColor);
         }
     }
     
     @Override
-    public void render(int mouseX, int mouseY, float delta) {
+    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
         if (this.visible) {
             // fill
-            if (mouseX - x >= 0 && mouseX - x - width <= 0 && mouseY - y >= 0 && mouseY - y - height <= 0 && this.active || forceHover) {
+            if (mouseX - xPosition >= 0 && mouseX - xPosition - width <= 0 && mouseY - yPosition >= 0 && mouseY - yPosition - height <= 0 && this.enabled || forceHover) {
                 hovering = true;
-                fill(x + 1, y + 1, x + width - 1, y + height - 1, hilightColor);
+                drawRect(xPosition + 1, yPosition + 1, xPosition + width - 1, yPosition + height - 1, hilightColor);
             } else {
                 hovering = false;
-                fill(x + 1, y + 1, x + width - 1, y + height - 1, color);
+                drawRect(xPosition + 1, yPosition + 1, xPosition + width - 1, yPosition + height - 1, color);
             }
             // outline
-            fill(x, y, x + 1, y + height, borderColor);
-            fill(x + width - 1, y, x + width, y + height, borderColor);
-            fill(x + 1, y, x + width - 1, y + 1, borderColor);
-            fill(x + 1, y + height - 1, x + width - 1, y + height, borderColor);
+            drawRect(xPosition, yPosition, xPosition + 1, yPosition + height, borderColor);
+            drawRect(xPosition + width - 1, yPosition, xPosition + width, yPosition + height, borderColor);
+            drawRect(xPosition + 1, yPosition, xPosition + width - 1, yPosition + 1, borderColor);
+            drawRect(xPosition + 1, yPosition + height - 1, xPosition + width - 1, yPosition + height, borderColor);
             this.renderMessage();
         }
     }
     
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        //super.onClick(mouseX, mouseY);
-    }
     
     @Override
-    public void onRelease(double mouseX, double mouseY) {
-        super.onClick(mouseX, mouseY);
+    public void mouseReleased(int mouseX, int mouseY)
+    {
+        if(this.enabled && this.visible && mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height) {
+            onPress();
+        }
     }
     
-    @Override
     public void onPress() {
         if (onPress != null) onPress.accept(this);
     }

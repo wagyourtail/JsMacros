@@ -1,29 +1,26 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * @author Wagyourtail
  */
 @SuppressWarnings("unused")
-public class BlockDataHelper extends BaseHelper<BlockState> {
+public class BlockDataHelper extends BaseHelper<IBlockState> {
     private final Block b;
     private final BlockPos bp;
-    private final BlockEntity e;
+    private final TileEntity e;
     
-    public BlockDataHelper(BlockState b, BlockEntity e, BlockPos bp) {
+    public BlockDataHelper(IBlockState b, TileEntity e, BlockPos bp) {
         super(b);
         this.b = b.getBlock();
         this.bp = bp;
@@ -61,14 +58,14 @@ public class BlockDataHelper extends BaseHelper<BlockState> {
      * @return the item ID of the block.
      */
     public String getId() {
-        return Registry.BLOCK.getId(b).toString();
+        return Block.blockRegistry.getNameForObject(b).toString();
     }
     
     /**
      * @return the translated name of the block.
      */
     public String getName() {
-        return b.getName().toString();
+        return b.getLocalizedName();
     }
     
     /**
@@ -77,9 +74,9 @@ public class BlockDataHelper extends BaseHelper<BlockState> {
     public Map<String, String> getNBT() {
         if (e == null) return null;
         Map<String, String> m = new HashMap<>();
-        CompoundTag t = e.toInitialChunkDataTag();
-        for (String s : t.getKeys()) {
-            m.put(s, t.get(s).asString());
+        NBTTagCompound t = e.serializeNBT();
+        for (String s : t.getKeySet()) {
+            m.put(s, t.getTag(s).toString());
         }
         return m;
     }
@@ -91,8 +88,9 @@ public class BlockDataHelper extends BaseHelper<BlockState> {
      */
     public Map<String, String> getBlockState() {
         Map<String, String> map = new HashMap<>();
-        for (Entry<Property<?>, Comparable<?>> e : base.getEntries().entrySet()) {
-            map.put(e.getKey().getName(), Util.getValueAsString(e.getKey(), e.getValue()));
+        
+        for (IProperty<?> e : base.getPropertyNames()) {
+            map.put(e.getName(), base.getValue(e).toString());
         }
         return map;
     }
@@ -111,11 +109,11 @@ public class BlockDataHelper extends BaseHelper<BlockState> {
     }
     
     
-    public BlockState getRawBlockState() {
+    public IBlockState getRawBlockState() {
         return base;
     }
     
-    public BlockEntity getRawBlockEntity() {
+    public TileEntity getRawBlockEntity() {
         return e;
     }
     

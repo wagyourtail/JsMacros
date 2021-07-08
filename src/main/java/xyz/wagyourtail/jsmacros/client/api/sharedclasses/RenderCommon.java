@@ -1,18 +1,17 @@
 package xyz.wagyourtail.jsmacros.client.api.sharedclasses;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.item.ItemRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
 import xyz.wagyourtail.jsmacros.client.api.helpers.ItemStackHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
+import xyz.wagyourtail.jsmacros.client.gui.elements.Drawable;
 
 /**
  * @author Wagyourtail
@@ -20,7 +19,7 @@ import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
  */
 @SuppressWarnings("unused")
 public class RenderCommon {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getMinecraft();
     
     public static interface RenderElement extends Drawable {
         int getZIndex();
@@ -90,7 +89,7 @@ public class RenderCommon {
          * @return
          */
         public Item setRotation(double rotation) {
-            this.rotation = MathHelper.wrapDegrees((float)rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float((float)rotation);
             return this;
         }
         
@@ -132,7 +131,7 @@ public class RenderCommon {
          * @return
          */
         public Item setItem(String id, int count) {
-            net.minecraft.item.Item it = Registry.ITEM.get(new Identifier(id));
+            net.minecraft.item.Item it = net.minecraft.item.Item.itemRegistry.getObject(new ResourceLocation(id));
             this.item = new ItemStack(it, count);
             return this;
         }
@@ -147,19 +146,19 @@ public class RenderCommon {
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            GlStateManager.scaled(scale, scale, 1);
-            GlStateManager.translated(x, y, 0);
-            GlStateManager.rotatef(rotation, 0, 0, 1);
-            GlStateManager.translated(-x, -y, 0);
+            GlStateManager.scale(scale, scale, 1);
+            GlStateManager.translate(x, y, 0);
+            GlStateManager.rotate(rotation, 0, 0, 1);
+            GlStateManager.translate(-x, -y, 0);
             if (item != null) {
-                ItemRenderer i = mc.getItemRenderer();
-                i.renderGuiItemIcon(item,(int) (x / scale), (int) (y / scale));
-                if (overlay) i.renderGuiItemOverlay(mc.textRenderer, item, (int) (x / scale), (int) (y / scale), ovText);
+                RenderItem i = mc.getRenderItem();
+                i.renderItemAndEffectIntoGUI(item,(int) (x / scale), (int) (y / scale));
+                if (overlay) i.renderItemOverlayIntoGUI(mc.fontRendererObj, item, (int) (x / scale), (int) (y / scale), ovText);
             }
-            GlStateManager.translated(x, y, 0);
-            GlStateManager.rotatef(-rotation, 0, 0, 1);
-            GlStateManager.translated(-x, -y, 0);
-            GlStateManager.scaled(1 / scale, 1 / scale, 1);
+            GlStateManager.translate(x, y, 0);
+            GlStateManager.rotate(-rotation, 0, 0, 1);
+            GlStateManager.translate(-x, -y, 0);
+            GlStateManager.scale(1 / scale, 1 / scale, 1);
         }
     
         @Override
@@ -174,7 +173,7 @@ public class RenderCommon {
      * @since 1.2.3
      */
     public static class Image implements RenderElement {
-        private Identifier imageid;
+        private ResourceLocation imageid;
         public float rotation;
         public int x;
         public int y;
@@ -200,7 +199,7 @@ public class RenderCommon {
             this.regionHeight = regionHeight;
             this.textureWidth = textureWidth;
             this.textureHeight = textureHeight;
-            imageid = new Identifier(id);
+            imageid = new ResourceLocation(id);
             this.rotation = rotation;
         }
         
@@ -224,7 +223,7 @@ public class RenderCommon {
          * @return
          */
         public Image setRotation(double rotation) {
-            this.rotation = MathHelper.wrapDegrees((float) rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float((float)rotation);
             return this;
         }
         
@@ -239,7 +238,7 @@ public class RenderCommon {
          * @param textureHeight
          */
         public void setImage(String id, int imageX, int imageY, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-            imageid = new Identifier(id);
+            imageid = new ResourceLocation(id);
             this.imageX = imageX;
             this.imageY = imageY;
             this.regionWidth = regionWidth;
@@ -258,16 +257,16 @@ public class RenderCommon {
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            GlStateManager.translated(x, y, 0);
-            GlStateManager.rotatef(rotation, 0, 0, 1);
-            GlStateManager.translated(-x, -y, 0);
+            GlStateManager.translate(x, y, 0);
+            GlStateManager.rotate(rotation, 0, 0, 1);
+            GlStateManager.translate(-x, -y, 0);
             mc.getTextureManager().bindTexture(imageid);
             GlStateManager.enableBlend();
-            DrawableHelper.blit(x, y, width, height, imageX, imageY, regionWidth, regionHeight, textureWidth, textureHeight);
+            Gui.drawScaledCustomSizeModalRect(x, y, imageX, imageY, regionWidth, regionHeight, width, height, textureWidth, textureHeight);
             GlStateManager.disableBlend();
-            GlStateManager.translated(-x, -y, 0);
-            GlStateManager.rotatef(-rotation, 0, 0, 1);
-            GlStateManager.translated(x, y, 0);
+            GlStateManager.translate(-x, -y, 0);
+            GlStateManager.rotate(-rotation, 0, 0, 1);
+            GlStateManager.translate(x, y, 0);
         }
     
         @Override
@@ -293,14 +292,14 @@ public class RenderCommon {
         public Rect(int x1, int y1, int x2, int y2, int color, float rotation, int zIndex) {
             setPos(x1, y1, x2, y2);
             setColor(color);
-            this.rotation = MathHelper.wrapDegrees(rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float(rotation);
             this.zIndex = zIndex;
         }
         
         public Rect(int x1, int y1, int x2, int y2, int color, int alpha, float rotation, int zIndex) {
             setPos(x1, y1, x2, y2);
             setColor(color, alpha);
-            this.rotation = MathHelper.wrapDegrees(rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float(rotation);
             this.zIndex = zIndex;
         }
         
@@ -358,19 +357,19 @@ public class RenderCommon {
          * @return
          */
         public Rect setRotation(double rotation) {
-            this.rotation = MathHelper.wrapDegrees((float) rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float((float)rotation);
             return this;
         }
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            GlStateManager.translated(x1, y1, 0);
-            GlStateManager.rotatef(rotation, 0, 0, 1);
-            GlStateManager.translated(-x1, -y1, 0);
-            DrawableHelper.fill(x1, y1, x2, y2, color);
-            GlStateManager.translated(x1, y1, 0);
-            GlStateManager.rotatef(-rotation, 0, 0, 1);
-            GlStateManager.translated(-x1, -y1, 0);
+            GlStateManager.translate(x1, y1, 0);
+            GlStateManager.rotate(rotation, 0, 0, 1);
+            GlStateManager.translate(-x1, -y1, 0);
+            Gui.drawRect(x1, y1, x2, y2, color);
+            GlStateManager.translate(x1, y1, 0);
+            GlStateManager.rotate(-rotation, 0, 0, 1);
+            GlStateManager.translate(-x1, -y1, 0);
         }
     
         @Override
@@ -385,7 +384,7 @@ public class RenderCommon {
      * @since 1.0.5
      */
     public static class Text implements RenderElement {
-        public net.minecraft.text.Text text;
+        public IChatComponent text;
         public double scale;
         public float rotation;
         public int x;
@@ -396,14 +395,14 @@ public class RenderCommon {
         public int zIndex;
         
         public Text(String text, int x, int y, int color, int zIndex, boolean shadow, double scale, float rotation) {
-            this.text = new LiteralText(text);
+            this.text = new ChatComponentText(text);
             this.x = x;
             this.y = y;
             this.color = color;
-            this.width = mc.textRenderer.getStringWidth(text);
+            this.width = mc.fontRendererObj.getStringWidth(text);
             this.shadow = shadow;
             this.scale = scale;
-            this.rotation = MathHelper.wrapDegrees(rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float(rotation);
             this.zIndex = zIndex;
         }
         
@@ -412,10 +411,10 @@ public class RenderCommon {
             this.x = x;
             this.y = y;
             this.color = color;
-            this.width = mc.textRenderer.getStringWidth(this.text.asFormattedString());
+            this.width = mc.fontRendererObj.getStringWidth(this.text.getFormattedText());
             this.shadow = shadow;
             this.scale = scale;
-            this.rotation = MathHelper.wrapDegrees(rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float(rotation);
             this.zIndex = zIndex;
         }
         
@@ -437,7 +436,7 @@ public class RenderCommon {
          * @return
          */
         public Text setRotation(double rotation) {
-            this.rotation = MathHelper.wrapDegrees((float) rotation);
+            this.rotation = MathHelper.wrapAngleTo180_float((float)rotation);
             return this;
         }
         
@@ -459,8 +458,8 @@ public class RenderCommon {
          * @return
          */
         public Text setText(String text) {
-            this.text = new LiteralText(text);
-            this.width = mc.textRenderer.getStringWidth(text);
+            this.text = new ChatComponentText(text);
+            this.width = mc.fontRendererObj.getStringWidth(text);
             return this;
         }
         
@@ -471,7 +470,7 @@ public class RenderCommon {
          */
         public Text setText(TextHelper text) {
             this.text = text.getRaw();
-            this.width = mc.textRenderer.getStringWidth(this.text.asFormattedString());
+            this.width = mc.fontRendererObj.getStringWidth(this.text.getFormattedText());
             return this;
         }
         
@@ -493,16 +492,16 @@ public class RenderCommon {
     
         @Override
         public void render(int mouseX, int mouseY, float delta) {
-            GlStateManager.scaled(scale, scale, 1);
-            GlStateManager.translated(x, y, 0);
-            GlStateManager.rotatef(rotation, 0, 0, 1);
-            GlStateManager.translated(-x, -y, 0);
-            if (shadow) mc.textRenderer.drawWithShadow(text.asFormattedString(), (int)(x / scale), (int)(y / scale), color);
-            else mc.textRenderer.draw(text.asFormattedString(), (int)(x / scale), (int)(y / scale), color);
-            GlStateManager.translated(x, y, 0);
-            GlStateManager.rotatef(-rotation, 0, 0, 1);
-            GlStateManager.translated(-x, -y, 0);
-            GlStateManager.scaled(1 / scale, 1 / scale, 1);
+            GlStateManager.scale(scale, scale, 1);
+            GlStateManager.translate(x, y, 0);
+            GlStateManager.rotate(rotation, 0, 0, 1);
+            GlStateManager.translate(-x, -y, 0);
+            if (shadow) mc.fontRendererObj.drawStringWithShadow(text.getFormattedText(), (int)(x / scale), (int)(y / scale), color);
+            else mc.fontRendererObj.drawString(text.getFormattedText(), (int)(x / scale), (int)(y / scale), color);
+            GlStateManager.translate(x, y, 0);
+            GlStateManager.rotate(-rotation, 0, 0, 1);
+            GlStateManager.translate(-x, -y, 0);
+            GlStateManager.scale(1 / scale, 1 / scale, 1);
         }
     
         @Override

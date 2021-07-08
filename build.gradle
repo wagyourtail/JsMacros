@@ -1,82 +1,121 @@
-plugins {
-	id 'java'
-	id 'fabric-loom' version '0.8-SNAPSHOT'
-	id 'maven-publish'
+import org.gradle.internal.jvm.Jvm
+import org.apache.tools.ant.filters.ReplaceTokens
+
+// For those who want the bleeding edge
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven { url 'https://repo.spongepowered.org/maven' }
+        maven { url 'https://jitpack.io' }
+    }
+    dependencies {
+        classpath 'com.github.wagyourtail:forgegradle:7747de8fe7'
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.6-SNAPSHOT'
+        classpath files(Jvm.current().toolsJar)
+    }
 }
+
+apply plugin: 'java'
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'maven-publish'
+
+archivesBaseName = project.archives_base_name
+version = project.mod_version
+group = project.maven_group + ".1_8_9"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group + "." + project.minecraft_version.replaceAll("\\.", "_")
-
 repositories {
-	flatDir {
-		dirs 'libs'
-	}
     mavenCentral()
-    maven {
-        name "Modmuss50 Repository"
-        url 'https://maven.fabricmc.net/'
-    }
+    jcenter()
+
     maven { url 'https://jitpack.io' }
-    maven {
-		url "https://www.cursemaven.com"
-		content {
-			includeGroup "curse.maven"
-		}
-	}
+    maven { url 'https://repo.spongepowered.org/maven/' }
+}
+
+minecraft {
+    version = "1.8.9-11.15.1.1722"
+    runDir = "run"
+
+    // the mappings can be changed at any time, and must be in the following format.
+    // snapshot_YYYYMMDD   snapshot are built nightly.
+    // stable_#            stables are built at the discretion of the MCP team.
+    // Use non-default mappings at your own risk. they may not allways work.
+    // simply re-run your setup task after changing the mappings to update your workspace.
+    mappings = "stable_20"
+    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+}
+
+configurations {
+    jarinjar
+    jarinjar.transitive = false
+    shadow
 }
 
 dependencies {
-	//to change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	
-	//partial fabric api
-	modImplementation "net.fabricmc.fabric-api:fabric-api-base:${project.api_base_version}"
-	include "net.fabricmc.fabric-api:fabric-api-base:${project.api_base_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:${project.lifecycle_events_version}"
-    include "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:${project.lifecycle_events_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.key_bind_api_version}"
-    include "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.key_bind_api_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
-    include "net.fabricmc.fabric-api:fabric-resource-loader-v0:${project.resource_loader_version}"
+    // you may put jars on which you depend on in ./libs
+    // or you may define them like so..
+    //compile "some.group:artifact:version:classifier"
+    //compile "some.group:artifact:version"
 
-	implementation "org.graalvm.sdk:graal-sdk:${project.graal_version}"
-	implementation "org.graalvm.js:js:${project.graal_version}"
-	implementation "org.graalvm.truffle:truffle-api:${project.graal_version}"
-	implementation "org.graalvm.regex:regex:${project.graal_version}"
-	implementation group: 'com.ibm.icu', name: 'icu4j', version: '67.1'
+    // real examples
+    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
+    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
 
-	include "org.graalvm.sdk:graal-sdk:${project.graal_version}"
-	include "org.graalvm.js:js:${project.graal_version}"
-	include "org.graalvm.truffle:truffle-api:${project.graal_version}"
-	include "org.graalvm.regex:regex:${project.graal_version}"
-	include group: 'com.ibm.icu', name: 'icu4j', version: '67.1'
+    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
+    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
 
-    implementation "io.noties:prism4j:${project.prism_version}"
-    include "io.noties:prism4j:${project.prism_version}"
+    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
+    // except that these dependencies get remapped to your current MCP mappings
+    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // for more info...
+    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
+    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    implementation 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
+    shadow 'org.spongepowered:mixin:0.7.11-SNAPSHOT'
+
+//    shadow "org.ow2.asm:asm:5.0.3"
+//    shadow "org.ow2.asm:asm-tree:5.0.3"
+//    shadow "org.ow2.asm:asm-commons:5.0.3"
+//    shadow "org.ow2.asm:asm-util:5.0.3"
+
+    implementation "org.graalvm.sdk:graal-sdk:${project.graal_version}"
+    jarinjar "org.graalvm.sdk:graal-sdk:${project.graal_version}"
+    implementation "org.graalvm.js:js:${project.graal_version}"
+    jarinjar "org.graalvm.js:js:${project.graal_version}"
+    implementation "org.graalvm.truffle:truffle-api:${project.graal_version}"
+    jarinjar "org.graalvm.truffle:truffle-api:${project.graal_version}"
+    implementation "org.graalvm.regex:regex:${project.graal_version}"
+    jarinjar "org.graalvm.regex:regex:${project.graal_version}"
+    implementation group: 'com.ibm.icu', name: 'icu4j', version: '67.1'
+    jarinjar group: 'com.ibm.icu', name: 'icu4j', version: '67.1'
+    implementation "com.mojang:brigadier:${project.brigadier_version}"
+    jarinjar "com.mojang:brigadier:${project.brigadier_version}"
+
+    implementation "io.noties:prism4j:${prism_version}"
+    jarinjar "io.noties:prism4j:${prism_version}"
 
     implementation "com.neovisionaries:nv-websocket-client:2.10"
-    include "com.neovisionaries:nv-websocket-client:2.10"
-	
-	//nullable not defined so...
-	implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    jarinjar "com.neovisionaries:nv-websocket-client:2.10"
 
-	modImplementation("io.github.prospector:modmenu:${project.mod_menu_version}") {
-        transitive = false
-    }
+    //nullable not defined so...
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    // https://mvnrepository.com/artifact/org.jetbrains/annotations
+    implementation group: 'org.jetbrains', name: 'annotations', version: '16.0.1'
+
 }
 
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
+mixin {
+    add sourceSets.main, "jsmacros.refmap.json"
+    defaultObfuscationEnv searge
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -84,103 +123,113 @@ processResources {
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile) {
 	options.encoding = "UTF-8"
-
-	//TODO: remove in 1.17?
-	def targetVersion = 8
-	if (JavaVersion.current().isJava9Compatible()) {
-		it.options.release = targetVersion
-	}
-}
-
-// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-// if it is present.
-// If you remove this task, sources will not be generated.
-task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = "sources"
-	from sourceSets.main.allSource
-}
-
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
 }
 
 jar {
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
-	}
+    manifest {
+        attributes([
+                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+                'FMLCorePlugin': 'xyz.wagyourtail.jsmacros.client.JsMacrosMixinLoader',
+                'JsMacrosDeps': configurations.jarinjar.files.collect { it.name }.join(" "),
+                'Maven-Artifact': "${project.group}:${project.archivesBaseName}:${project.version}",
+                'FMLCorePluginContainsFMLMod': true,
+                'ForceLoadAsMod': true
+        ])
+    }
+
+    from(configurations.jarinjar.files) {
+        include '*'
+        into 'META-INF/jars/'
+    }
+
+    from {
+        configurations.shadow.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
-javadoc {
-	options.tags = [ "@custom.replaceParams" ]
-	source = sourceSets.main.allJava
-	classpath = sourceSets.main.compileClasspath
-	destinationDir = new File(project.buildDir, "docs/docs")
-	options {
-		links 'https://docs.oracle.com/javase/8/docs/api/'
-	}
+processResources {
+    def jarinjar = project.configurations.findByName("jarinjar").dependencies
+
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+                
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
 }
+
 
 task generateTSDoc(type: Javadoc) {
-	source = sourceSets.main.allJava
-	classpath = sourceSets.main.compileClasspath
-	destinationDir = new File(project.buildDir, "docs/typescript/headers/")
-	options.doclet = "xyz.wagyourtail.doclet.tsdoclet.Main"
-	options.docletpath new File(project.rootDir, "buildSrc/build/libs/buildSrc.jar")
-	options.addStringOption "v", version
+    source = sourceSets.main.allJava
+    classpath = sourceSets.main.compileClasspath
+    destinationDir = new File(project.buildDir, "docs/typescript/headers/")
+    options.doclet = "xyz.wagyourtail.tsdoclet.Main"
+    options.docletpath new File(project.rootDir, "buildSrc/build/libs/buildSrc.jar")
+    options.addStringOption "v", version
 }
 
 task copyTSEnv(type: Copy, dependsOn: generateTSDoc) {
-	from new File(project.rootDir, "graalts")
-	into new File(project.buildDir, "docs/typescript")
+    from new File(project.rootDir, "graalts")
+    into new File(project.buildDir, "docs/typescript")
 }
 
 task generateWebDoc(type: Javadoc) {
-	source = sourceSets.main.allJava
-	classpath = sourceSets.main.compileClasspath
-	destinationDir = new File(project.buildDir, "docs/web/")
-	options.doclet = "xyz.wagyourtail.doclet.webdoclet.Main"
-	options.docletpath new File(project.rootDir, "buildSrc/build/libs/buildSrc.jar")
-	options.addStringOption "v", version
-	options.addStringOption "mcv", project.minecraft_version
-	options {
-		links 'https://docs.oracle.com/javase/8/docs/api/'
-	}
+    source = sourceSets.main.allJava
+    classpath = sourceSets.main.compileClasspath
+    destinationDir = new File(project.buildDir, "docs/web/")
+    options.doclet = "xyz.wagyourtail.webdoclet.Main"
+    options.docletpath new File(project.rootDir, "buildSrc/build/libs/buildSrc.jar")
+    options.addStringOption "v", version
+    options.addStringOption "mcv", project.minecraft.version
+    options {
+        links 'https://docs.oracle.com/javase/8/docs/api/'
+    }
 }
 
 task copyWebDoc(type: Copy, dependsOn: generateWebDoc) {
-	from new File(project.rootDir, "webdoc")
-	into new File(project.buildDir, "docs/web")
+    from new File(project.rootDir, "webdoc")
+    into new File(project.buildDir, "docs/web")
 }
 
 task createDist(type: Copy, dependsOn: copyWebDoc) {
-	from(new File(project.buildDir, "docs"), new File(project.buildDir, "libs"))
-	into new File(project.rootDir, "dist")
+    from(new File(project.buildDir, "docs"), new File(project.buildDir, "libs"))
+    into new File(project.rootDir, "dist")
 }
 
 generateWebDoc.dependsOn(copyTSEnv)
 build.finalizedBy(createDist)
 
+def reobfFile = file("$buildDir/libs/$archivesBaseName-$version" + ".jar")
+def reobfArtifact = artifacts.add('default', reobfFile) {
+    type 'jar'
+    builtBy 'build'
+}
+def reobfSourceFile = file("$buildDir/libs/$archivesBaseName-$version" + "-sources.jar")
+def reobfSourceArtifact = artifacts.add('default', reobfSourceFile) {
+    type 'jar'
+    classifier 'sources'
+    builtBy 'build'
+}
 publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			// add all the jars that should be included when publishing to maven
-			artifact(remapJar) {
-				builtBy remapJar
-			}
-			artifact(sourcesJar) {
-				builtBy remapSourcesJar
-			}
-		}
-	}
+    publications {
+        mavenJava(MavenPublication) {
+            artifact reobfArtifact
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+            artifact reobfSourceArtifact
+        }
+
+
+    }
+    repositories {
+    }
 }

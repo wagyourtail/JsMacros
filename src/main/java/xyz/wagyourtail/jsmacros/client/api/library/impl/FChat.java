@@ -1,10 +1,8 @@
 package xyz.wagyourtail.jsmacros.client.api.library.impl;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.toast.SystemToast;
-import net.minecraft.client.toast.ToastManager;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IChatComponent;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.access.IChatHud;
 import xyz.wagyourtail.jsmacros.client.api.classes.CommandBuilder;
@@ -26,7 +24,7 @@ import java.util.concurrent.Semaphore;
  @Library("Chat")
  @SuppressWarnings("unused")
 public class FChat extends BaseLibrary {
-    private static final MinecraftClient mc = MinecraftClient.getInstance();
+    private static final Minecraft mc = Minecraft.getMinecraft();
     /**
      * Log to player chat.
      * 
@@ -45,7 +43,7 @@ public class FChat extends BaseLibrary {
      * @throws InterruptedException
      */
     public void log(Object message, boolean await) throws InterruptedException {
-        boolean joinedMain = MinecraftClient.getInstance().isOnThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread());
+        boolean joinedMain = mc.isCallingFromMinecraftThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread());
         if (joinedMain) {
             if (message instanceof TextHelper) {
                 logInternal((TextHelper)message);
@@ -54,7 +52,7 @@ public class FChat extends BaseLibrary {
             }
         } else {
             final Semaphore semaphore = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
+            mc.addScheduledTask(() -> {
                 if (message instanceof TextHelper) {
                     logInternal((TextHelper) message);
                 } else if (message != null) {
@@ -68,14 +66,13 @@ public class FChat extends BaseLibrary {
     
     private static void logInternal(String message) {
         if (message != null) {
-            LiteralText text = new LiteralText(message);
-            ((IChatHud)mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(text);
+            ChatComponentText text = new ChatComponentText(message);
+            ((IChatHud)mc.ingameGUI.getChatGUI()).jsmacros_addMessageBypass(text);
         }
     }
     
     private static void logInternal(TextHelper text) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        ((IChatHud)mc.inGameHud.getChatHud()).jsmacros_addMessageBypass(text.getRaw());
+        ((IChatHud)mc.ingameGUI.getChatGUI()).jsmacros_addMessageBypass(text.getRaw());
     }
     
     /**
@@ -99,16 +96,16 @@ public class FChat extends BaseLibrary {
      * @throws InterruptedException
      */
     public void say(String message, boolean await) throws InterruptedException {
-        boolean joinedMain = MinecraftClient.getInstance().isOnThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread());
+        boolean joinedMain = mc.isCallingFromMinecraftThread() || Core.instance.profile.joinedThreadStack.contains(Thread.currentThread());
         if (message == null) return;
         if (joinedMain) {
-            assert mc.player != null;
-            mc.player.sendChatMessage(message);
+            assert mc.thePlayer != null;
+            mc.thePlayer.sendChatMessage(message);
         } else {
             final Semaphore semaphore = new Semaphore(await ? 0 : 1);
-            mc.execute(() -> {
-                assert mc.player != null;
-                mc.player.sendChatMessage(message);
+            mc.addScheduledTask(() -> {
+                assert mc.thePlayer != null;
+                mc.thePlayer.sendChatMessage(message);
                 semaphore.release();
             });
             semaphore.acquire();
@@ -129,16 +126,16 @@ public class FChat extends BaseLibrary {
     public void title(Object title, Object subtitle, int fadeIn, int remain, int fadeOut) {
         String titlee = null;
         String subtitlee = null;
-        if (title instanceof TextHelper) titlee = ((TextHelper) title).getRaw().asFormattedString();
+        if (title instanceof TextHelper) titlee = ((TextHelper) title).getRaw().getFormattedText();
         else if (title != null) titlee = title.toString();
-        if (subtitle instanceof TextHelper) subtitlee = ((TextHelper) subtitle).getRaw().asFormattedString();
+        if (subtitle instanceof TextHelper) subtitlee = ((TextHelper) subtitle).getRaw().getFormattedText();
         else if (subtitle != null) subtitlee = subtitle.toString();
         if (title != null)
-            mc.inGameHud.setTitles(titlee, null, fadeIn, remain, fadeOut);
+            mc.ingameGUI.displayTitle(titlee, null, fadeIn, remain, fadeOut);
         if (subtitle != null)
-            mc.inGameHud.setTitles(null, subtitlee, fadeIn, remain, fadeOut);
+            mc.ingameGUI.displayTitle(null, subtitlee, fadeIn, remain, fadeOut);
         if (title == null && subtitle == null)
-            mc.inGameHud.setTitles(null, null, fadeIn, remain, fadeOut);
+            mc.ingameGUI.displayTitle(null, null, fadeIn, remain, fadeOut);
     }
     
     /**
@@ -150,11 +147,11 @@ public class FChat extends BaseLibrary {
      * @param tinted
      */
     public void actionbar(Object text, boolean tinted) {
-        assert mc.inGameHud != null;
-        Text textt = null;
+        assert mc.ingameGUI != null;
+        IChatComponent textt = null;
         if (text instanceof TextHelper) textt = ((TextHelper) text).getRaw();
-        else if (text != null) textt = new LiteralText(text.toString());
-        mc.inGameHud.setOverlayMessage(textt, tinted);
+        else if (text != null) textt = new ChatComponentText(text.toString());
+        mc.ingameGUI.setRecordPlaying(textt, tinted);
     }
     
     /**
@@ -166,12 +163,13 @@ public class FChat extends BaseLibrary {
      * @param desc
      */
     public void toast(Object title, Object desc) {
-        ToastManager t = mc.getToastManager();
-        if (t != null) {
-            Text titlee = (title instanceof TextHelper) ? ((TextHelper) title).getRaw() : title != null ? new LiteralText(title.toString()) : null;
-            Text descc = (desc instanceof TextHelper) ? ((TextHelper) desc).getRaw() : desc != null ? new LiteralText(desc.toString()) : null;
-            if (titlee != null) t.add(new SystemToast(null, titlee, descc));
-        }
+        //TODO:
+//        ToastManager t = mc.getToastManager();
+//        if (t != null) {
+//            Text titlee = (title instanceof TextHelper) ? ((TextHelper) title).getRaw() : title != null ? new LiteralText(title.toString()) : null;
+//            Text descc = (desc instanceof TextHelper) ? ((TextHelper) desc).getRaw() : desc != null ? new LiteralText(desc.toString()) : null;
+//            if (titlee != null) t.add(new SystemToast(null, titlee, descc));
+//        }
     }
     
     /**
@@ -184,7 +182,7 @@ public class FChat extends BaseLibrary {
      * @return a new {@link xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper TextHelper}
      */
     public TextHelper createTextHelperFromString(String content) {
-        return new TextHelper(new LiteralText(content));
+        return new TextHelper(new ChatComponentText(content));
     }
     
     /**

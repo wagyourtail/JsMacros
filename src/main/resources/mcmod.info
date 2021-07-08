@@ -1,0 +1,16 @@
+[
+{
+  "modid": "jsmacros",
+  "name": "Js Macros",
+  "description": "Example placeholder mod.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://jsmacros.wagyourtail.xyz",
+  "updateUrl": "",
+  "authorList": ["Wagyourtail"],
+  "credits": "",
+  "logoFile": "/assets/jsmacros/icon.png",
+  "screenshots": [],
+  "dependencies": []
+}
+]

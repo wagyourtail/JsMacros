@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.gui.screens;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.GuiScreen;
 import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.config.ClientConfigV2;
 import xyz.wagyourtail.jsmacros.core.Core;
@@ -15,14 +15,14 @@ import java.util.Set;
 
 public class EventMacrosScreen extends MacroScreen {
     
-    public EventMacrosScreen(Screen parent) {
+    public EventMacrosScreen(GuiScreen parent) {
         super(parent);
         this.parent = parent;
     }
     
     @Override
-    protected void init() {
-        super.init();
+    public void initGui() {
+        super.initGui();
         eventScreen.setColor(0x4FFFFFFF);
         
         keyScreen.onPress = (btn) -> this.openParent();
