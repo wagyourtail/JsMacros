@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.gui.settings.settingfields;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import xyz.wagyourtail.jsmacros.client.gui.elements.TextInput;
 import xyz.wagyourtail.jsmacros.client.gui.screens.BaseScreen;
@@ -20,7 +20,7 @@ public class StringField extends AbstractSettingField<String> {
     public void init() {
         super.init();
         try {
-            addDrawableChild(new TextInput(x + width/2, y, width / 2, height, textRenderer, 0xFF101010, 0, 0xFF4040FF, 0xFFFFFF, setting.get(), null, (value) -> {
+            addButton(new TextInput(x + width/2, y, width / 2, height, textRenderer, 0xFF101010, 0, 0xFF4040FF, 0xFFFFFF, setting.get(), null, (value) -> {
                 try {
                     setting.set(value);
                 } catch (IllegalAccessException | InvocationTargetException e) {
@@ -35,7 +35,7 @@ public class StringField extends AbstractSettingField<String> {
     @Override
     public void setPos(int x, int y, int width, int height) {
         super.setPos(x, y, width, height);
-        for (ClickableWidget btn : buttons) {
+        for (AbstractButtonWidget btn : buttons) {
             btn.y = y;
         }
     }

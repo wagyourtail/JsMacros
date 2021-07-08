@@ -2,10 +2,10 @@ package xyz.wagyourtail.jsmacros.client.api.helpers;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.CloudRenderMode;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.GraphicsMode;
-import net.minecraft.client.option.Perspective;
+import net.minecraft.client.options.CloudRenderMode;
+import net.minecraft.client.options.GameOptions;
+import net.minecraft.client.options.GraphicsMode;
+import net.minecraft.client.options.Perspective;
 import net.minecraft.client.util.Window;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.resource.ResourcePackProfile;

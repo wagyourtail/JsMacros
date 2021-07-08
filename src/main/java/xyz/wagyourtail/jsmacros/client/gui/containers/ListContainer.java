@@ -2,7 +2,7 @@ package xyz.wagyourtail.jsmacros.client.gui.containers;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import xyz.wagyourtail.jsmacros.client.gui.elements.Button;
@@ -33,7 +33,7 @@ public class ListContainer extends MultiElementContainer<IContainerParent> {
         int w = width - 4;
         topScroll = y + 13;
         
-        scroll = this.addDrawableChild(new Scrollbar(x + width - 10, y + 13, 8, height - 28, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
+        scroll = this.addButton(new Scrollbar(x + width - 10, y + 13, 8, height - 28, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
         
         for (Text element : list) {
             addItem(element);
@@ -63,7 +63,7 @@ public class ListContainer extends MultiElementContainer<IContainerParent> {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         
-        for (ClickableWidget b : ImmutableList.copyOf(this.buttons)) {
+        for (AbstractButtonWidget b : ImmutableList.copyOf(this.buttons)) {
             if (b instanceof Button && ((Button) b).hovering && ((Button) b).cantRenderAllText()) {
                 // border
                 int width = textRenderer.getWidth(b.getMessage());

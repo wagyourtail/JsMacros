@@ -105,7 +105,7 @@ public class CategoryTreeContainer extends MultiElementContainer<ICategoryTreePa
     public void init() {
         if (this.isHead) {
             topScroll = 0;
-            scroll = addDrawableChild(new Scrollbar(x + width - 8, y, 8, height, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
+            scroll = addButton(new Scrollbar(x + width - 8, y, 8, height, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
             for (CategoryTreeContainer child : children.values()) {
                 child.initChild(showChildren);
             }
@@ -117,10 +117,10 @@ public class CategoryTreeContainer extends MultiElementContainer<ICategoryTreePa
     
     private void initChild(boolean show) {
         if (children.size() > 0) {
-            expandBtn = addDrawableChild(new Button(x, y, btnHeight, btnHeight, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(">"), (btn) -> this.toggleExpand()));
+            expandBtn = addButton(new Button(x, y, btnHeight, btnHeight, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(">"), (btn) -> this.toggleExpand()));
             expandBtn.visible = show;
         }
-        showBtn = addDrawableChild(new Button(x + btnHeight, y, width - btnHeight, btnHeight, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText(category), (btn) -> this.selectCategory()));
+        showBtn = addButton(new Button(x + btnHeight, y, width - btnHeight, btnHeight, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText(category), (btn) -> this.selectCategory()));
         showBtn.visible = show;
         showBtn.horizCenter = false;
         

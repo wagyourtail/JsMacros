@@ -3,9 +3,8 @@ package xyz.wagyourtail.jsmacros.client.gui.screens;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
@@ -187,10 +186,10 @@ public class EditorScreen extends BaseScreen {
         lineSpread = client.textRenderer.fontHeight + 1;
         int width = this.width - 10;
         
-        scrollbar = addDrawableChild(new Scrollbar(width, 12, 10, height - 24, 0, 0xFF000000, 0xFFFFFFFF, 1, this::setScroll));
-        saveBtn = this.addDrawableChild(new Button(width / 2, 0, width / 6, 12, textRenderer, needSave() ? 0xFFA0A000 : 0xFF00A000, 0xFF000000, needSave() ? 0xFF707000 : 0xFF007000, 0xFFFFFF, new TranslatableText("jsmacros.save"), (btn) -> save()));
-        this.addDrawableChild(new Button(width * 4 / 6, 0, width / 6, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.close"), (btn) -> openParent()));
-        this.addDrawableChild(new Button(width, 0, 10, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(client.world == null ? "X" : "-"), (btn) -> onClose()));
+        scrollbar = addButton(new Scrollbar(width, 12, 10, height - 24, 0, 0xFF000000, 0xFFFFFFFF, 1, this::setScroll));
+        saveBtn = addButton(new Button(width / 2, 0, width / 6, 12, textRenderer, needSave() ? 0xFFA0A000 : 0xFF00A000, 0xFF000000, needSave() ? 0xFF707000 : 0xFF007000, 0xFFFFFF, new TranslatableText("jsmacros.save"), (btn) -> save()));
+        addButton(new Button(width * 4 / 6, 0, width / 6, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.close"), (btn) -> openParent()));
+        addButton(new Button(width, 0, 10, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(client.world == null ? "X" : "-"), (btn) -> onClose()));
         
         if (language == null)
             setLanguage(getDefaultLanguage());
@@ -217,7 +216,7 @@ public class EditorScreen extends BaseScreen {
         };
         
         
-        this.addDrawableChild(new Button(this.width - width / 8, height - 12, width / 8, 12, textRenderer,0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(language), (btn) -> {
+        addButton(new Button(this.width - width / 8, height - 12, width / 8, 12, textRenderer,0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(language), (btn) -> {
             int height = langs.size() * (textRenderer.fontHeight + 1) + 4;
             openOverlay(new SelectorDropdownOverlay(btn.x, btn.y - height, btn.getWidth(), height, langs.stream().map(LiteralText::new).collect(Collectors.toList()), textRenderer, this, (i) -> {
                 setLanguage(langs.get(i));
@@ -225,7 +224,7 @@ public class EditorScreen extends BaseScreen {
             }));
         }));
         
-        this.addDrawableChild(new Button(this.width - width / 4, height - 12, width / 8, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.settings"), (btn) -> {
+        addButton(new Button(this.width - width / 4, height - 12, width / 8, 12, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.settings"), (btn) -> {
             openOverlay(new SettingsOverlay(this.width / 4, this.height / 4, this.width / 2, this.height / 2, textRenderer, this));
         }));
         
@@ -626,9 +625,8 @@ public class EditorScreen extends BaseScreen {
             client.textRenderer.draw(matrices, trim(renderedText[j]), 30, y + add + i * lineSpread, 0xFFFFFF);
         }
         
-        for (Element b : ImmutableList.copyOf(this.children())) {
-            if (b instanceof Drawable)
-                ((Drawable) b).render(matrices, mouseX, mouseY, delta);
+        for (AbstractButtonWidget b : ImmutableList.copyOf(this.buttons)) {
+            b.render(matrices, mouseX, mouseY, delta);
         }
         
         super.render(matrices, mouseX, mouseY, delta);

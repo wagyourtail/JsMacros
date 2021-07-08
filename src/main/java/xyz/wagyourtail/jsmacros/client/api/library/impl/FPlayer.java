@@ -6,7 +6,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.SignEditScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.util.ScreenshotRecorder;
+import net.minecraft.client.util.ScreenshotUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -52,7 +52,7 @@ public class FPlayer extends BaseLibrary {
      * @see xyz.wagyourtail.jsmacros.client.api.classes.Inventory
      */
     public Inventory<?> openInventory() {
-        assert mc.player != null && mc.player.getInventory() != null;
+        assert mc.player != null && mc.player.inventory != null;
         return Inventory.create();
     }
 
@@ -73,6 +73,7 @@ public class FPlayer extends BaseLibrary {
     public String getGameMode() {
         assert mc.interactionManager != null;
         GameMode mode = mc.interactionManager.getCurrentGameMode();
+        if (mode == null) mode = GameMode.NOT_SET;
         return mode.getName();
     }
 
@@ -133,10 +134,10 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, MethodWrapper<TextHelper, Object, Object> callback) {
         assert folder != null;
-        ScreenshotRecorder.saveScreenshot(new File(Core.instance.config.macroFolder, folder), mc.getFramebuffer(),
-            (text) -> {
-                if (callback != null) callback.accept(new TextHelper(text));
-        });
+        ScreenshotUtils.saveScreenshot(new File(Core.instance.config.macroFolder, folder), mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(),
+                mc.getFramebuffer(), (text) -> {
+                    if (callback != null) callback.accept(new TextHelper(text));
+                });
     }
 
     /**
@@ -151,10 +152,10 @@ public class FPlayer extends BaseLibrary {
      */
     public void takeScreenshot(String folder, String file, MethodWrapper<TextHelper, Object, Object> callback) {
         assert folder != null && file != null;
-        ScreenshotRecorder.saveScreenshot(new File(Core.instance.config.macroFolder, folder), file, mc.getFramebuffer(),
-            (text) -> {
-                if (callback != null) callback.accept(new TextHelper(text));
-        });
+        ScreenshotUtils.saveScreenshot(new File(Core.instance.config.macroFolder, folder), file, mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(),
+                mc.getFramebuffer(), (text) -> {
+                    if (callback != null) callback.accept(new TextHelper(text));
+                });
     }
 
     /**
@@ -247,7 +248,7 @@ public class FPlayer extends BaseLibrary {
      */
     public PlayerInput getCurrentPlayerInput() {
         assert mc.player != null;
-        return new PlayerInput(mc.player.input, mc.player.getYaw(), mc.player.getPitch(), mc.player.isSprinting());
+        return new PlayerInput(mc.player.input, mc.player.yaw, mc.player.pitch, mc.player.isSprinting());
     }
 
     /**

@@ -11,7 +11,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import xyz.wagyourtail.jsmacros.client.api.helpers.ItemStackHelper;
 import xyz.wagyourtail.jsmacros.client.api.helpers.TextHelper;
@@ -149,21 +148,19 @@ public class RenderCommon {
     
         @Override
         public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            matrices.push();
-            matrices.scale((float) scale, (float) scale, 1);
-            matrices.translate(x, y, 0);
-            matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rotation));
-            matrices.translate(-x, -y, 0);
+            RenderSystem.scaled(scale, scale, 1);
+            RenderSystem.translated(x, y, 0);
+            RenderSystem.rotatef(rotation, 0, 0, 1);
+            RenderSystem.translated(-x, -y, 0);
             if (item != null) {
                 ItemRenderer i = mc.getItemRenderer();
                 i.renderGuiItemIcon(item,(int) (x / scale), (int) (y / scale));
                 if (overlay) i.renderGuiItemOverlay(mc.textRenderer, item, (int) (x / scale), (int) (y / scale), ovText);
             }
-            matrices.pop();
-//            RenderSystem.translated(x, y, 0);
-//            RenderSystem.rotatef(-rotation, 0, 0, 1);
-//            RenderSystem.translated(-x, -y, 0);
-//            RenderSystem.scaled(1 / scale, 1 / scale, 1);
+            RenderSystem.translated(x, y, 0);
+            RenderSystem.rotatef(-rotation, 0, 0, 1);
+            RenderSystem.translated(-x, -y, 0);
+            RenderSystem.scaled(1 / scale, 1 / scale, 1);
         }
     
         @Override
@@ -262,19 +259,16 @@ public class RenderCommon {
     
         @Override
         public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            matrices.push();
-            matrices.translate(x, y, 0);
-            matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rotation));
-            matrices.translate(-x, -y, 0);
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderTexture(0, imageid);
+            RenderSystem.translated(x, y, 0);
+            RenderSystem.rotatef(rotation, 0, 0, 1);
+            RenderSystem.translated(-x, -y, 0);
+            mc.getTextureManager().bindTexture(imageid);
             RenderSystem.enableBlend();
             DrawableHelper.drawTexture(matrices, x, y, width, height, imageX, imageY, regionWidth, regionHeight, textureWidth, textureHeight);
             RenderSystem.disableBlend();
-            matrices.pop();
-//            RenderSystem.translated(-x, -y, 0);
-//            RenderSystem.rotatef(-rotation, 0, 0, 1);
-//            RenderSystem.translated(x, y, 0);
+            RenderSystem.translated(-x, -y, 0);
+            RenderSystem.rotatef(-rotation, 0, 0, 1);
+            RenderSystem.translated(x, y, 0);
         }
     
         @Override
@@ -371,15 +365,13 @@ public class RenderCommon {
     
         @Override
         public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            matrices.push();
-            matrices.translate(x1, y1, 0);
-            matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rotation));
-            matrices.translate(-x1, -y1, 0);
+            RenderSystem.translated(x1, y1, 0);
+            RenderSystem.rotatef(rotation, 0, 0, 1);
+            RenderSystem.translated(-x1, -y1, 0);
             DrawableHelper.fill(matrices, x1, y1, x2, y2, color);
-            matrices.pop();
-//            RenderSystem.translated(x1, y1, 0);
-//            RenderSystem.rotatef(-rotation, 0, 0, 1);
-//            RenderSystem.translated(-x1, -y1, 0);
+            RenderSystem.translated(x1, y1, 0);
+            RenderSystem.rotatef(-rotation, 0, 0, 1);
+            RenderSystem.translated(-x1, -y1, 0);
         }
     
         @Override
@@ -502,18 +494,16 @@ public class RenderCommon {
     
         @Override
         public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-            matrices.push();
-            matrices.scale((float) scale, (float) scale, 1);
-            matrices.translate(x, y, 0);
-            matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rotation));
-            matrices.translate(-x, -y, 0);
+            RenderSystem.scaled(scale, scale, 1);
+            RenderSystem.translated(x, y, 0);
+            RenderSystem.rotatef(rotation, 0, 0, 1);
+            RenderSystem.translated(-x, -y, 0);
             if (shadow) mc.textRenderer.drawWithShadow(matrices, text, (int)(x / scale), (int)(y / scale), color);
             else mc.textRenderer.draw(matrices, text, (int)(x / scale), (int)(y / scale), color);
-            matrices.pop();
-//            RenderSystem.translated(x, y, 0);
-//            RenderSystem.rotatef(-rotation, 0, 0, 1);
-//            RenderSystem.translated(-x, -y, 0);
-//            RenderSystem.scaled(1 / scale, 1 / scale, 1);
+            RenderSystem.translated(x, y, 0);
+            RenderSystem.rotatef(-rotation, 0, 0, 1);
+            RenderSystem.translated(-x, -y, 0);
+            RenderSystem.scaled(1 / scale, 1 / scale, 1);
         }
     
         @Override

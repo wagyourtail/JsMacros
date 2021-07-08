@@ -4,8 +4,8 @@ plugins {
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -68,11 +68,9 @@ dependencies {
 	//nullable not defined so...
 	implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
-	modImplementation("curse.maven:modmenu-308702:${project.modmenu_version}") {
+	modImplementation("io.github.prospector:modmenu:${project.mod_menu_version}") {
         transitive = false
     }
-    //for modmenu
-	modImplementation "net.fabricmc.fabric-api:fabric-screen-api-v1:1.0.4+155f865c13"
 }
 
 processResources {
@@ -89,7 +87,8 @@ processResources {
 tasks.withType(JavaCompile) {
 	options.encoding = "UTF-8"
 
-	def targetVersion = 16
+	//TODO: remove in 1.17?
+	def targetVersion = 8
 	if (JavaVersion.current().isJava9Compatible()) {
 		it.options.release = targetVersion
 	}

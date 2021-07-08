@@ -70,7 +70,7 @@ public class BossBarHelper extends BaseHelper<BossBar> {
      */
     public String getStyle() {
         String style = null;
-        switch (base.getStyle()) {
+        switch (base.getOverlay()) {
         case NOTCHED_10:
             style = "NOTCHED_10";
             break;

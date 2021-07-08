@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "xyz.wagyourtail.jsmacros.client.mixins",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_8",
   "client": [
     "access.MixinBossBarHud",
     "access.MixinChatHud",

@@ -80,7 +80,7 @@ public class CommandBuilder {
     }
 
     public CommandBuilder floatRangeArg(String name) {
-        argument(name, NumberRangeArgumentType::floatRange);
+        argument(name, NumberRangeArgumentType::method_30918);
         return this;
     }
 
@@ -110,7 +110,7 @@ public class CommandBuilder {
     }
 
     public CommandBuilder intRangeArg(String name) {
-        argument(name, NumberRangeArgumentType::intRange);
+        argument(name, NumberRangeArgumentType::numberRange);
         return this;
     }
 
@@ -120,7 +120,7 @@ public class CommandBuilder {
     }
 
     public CommandBuilder nbtArg(String name) {
-        argument(name, NbtCompoundArgumentType::nbtCompound);
+        argument(name, NbtCompoundTagArgumentType::nbtCompound);
         return this;
     }
 

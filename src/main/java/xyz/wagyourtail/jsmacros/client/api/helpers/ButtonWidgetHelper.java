@@ -1,9 +1,11 @@
 package xyz.wagyourtail.jsmacros.client.api.helpers;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import xyz.wagyourtail.jsmacros.client.JsMacros;
 import xyz.wagyourtail.jsmacros.client.api.sharedclasses.RenderCommon;
 import xyz.wagyourtail.jsmacros.core.Core;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
@@ -15,7 +17,7 @@ import java.util.concurrent.Semaphore;
  * @since 1.0.5
  */
 @SuppressWarnings("unused")
-public class ButtonWidgetHelper<T extends ClickableWidget> extends BaseHelper<T> implements RenderCommon.RenderElement {
+public class ButtonWidgetHelper<T extends AbstractButtonWidget> extends BaseHelper<T> implements RenderCommon.RenderElement {
     public int zIndex;
     
     public ButtonWidgetHelper(T btn) {

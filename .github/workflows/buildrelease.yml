@@ -90,11 +90,11 @@ jobs:
         with:
           ref: backport-1.16.5
 
-      - name: Set up JDK 8
+      - name: Set up JDK 16
         uses: actions/setup-java@v2
         with:
          distribution: 'adopt'
-         java-version: '8'
+         java-version: '16'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -157,11 +157,11 @@ jobs:
         with:
           ref: backport-1.15.2
 
-      - name: Set up JDK 8
+      - name: Set up JDK 16
         uses: actions/setup-java@v2
         with:
          distribution: 'adopt'
-         java-version: '8'
+         java-version: '16'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -224,11 +224,11 @@ jobs:
         with:
           ref: backport-1.14.4
 
-      - name: Set up JDK 8
+      - name: Set up JDK 16
         uses: actions/setup-java@v2
         with:
          distribution: 'adopt'
-         java-version: '8'
+         java-version: '16'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -291,11 +291,11 @@ jobs:
         with:
           ref: forge-1.16.5
 
-      - name: Set up JDK 8
+      - name: Set up JDK 16
         uses: actions/setup-java@v2
         with:
          distribution: 'adopt'
-         java-version: '8'
+         java-version: '16'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

@@ -13,7 +13,7 @@ import xyz.wagyourtail.jsmacros.client.api.sharedinterfaces.IDraw2D;
 
 @Mixin(InGameHud.class)
 class MixinInGameHud {
-    @Inject(at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;debugEnabled:Z"), method = "render")
+    @Inject(at = @At(value = "FIELD", target = "Lnet/minecraft/client/options/GameOptions;debugEnabled:Z"), method = "render")
     public void renderHud(MatrixStack matrixStack, float f, final CallbackInfo info) {
         
         synchronized (FHud.overlays) {
@@ -23,5 +23,8 @@ class MixinInGameHud {
                 } catch (Exception ignored) {}
             }
         }
+
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableAlphaTest();
     }
 }

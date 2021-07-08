@@ -134,14 +134,11 @@ public class FChat extends BaseLibrary {
         if (subtitle instanceof TextHelper) subtitlee = ((TextHelper) subtitle).getRaw();
         else if (subtitle != null) subtitlee = new LiteralText(subtitle.toString());
         if (title != null)
-            mc.inGameHud.setTitle(titlee);
+            mc.inGameHud.setTitles(titlee, null, fadeIn, remain, fadeOut);
         if (subtitle != null)
-            mc.inGameHud.setSubtitle(subtitlee);
-        if (title == null && subtitle == null) {
-            mc.inGameHud.setTitle(null);
-            mc.inGameHud.setSubtitle(null);
-        }
-        mc.inGameHud.setTitleTicks(fadeIn, remain, fadeOut);
+            mc.inGameHud.setTitles(null, subtitlee, fadeIn, remain, fadeOut);
+        if (title == null && subtitle == null)
+            mc.inGameHud.setTitles(null, null, fadeIn, remain, fadeOut);
     }
     
     /**

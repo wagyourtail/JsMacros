@@ -1,7 +1,7 @@
 package xyz.wagyourtail.jsmacros.client.gui.settings.settingcontainer;
 
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
@@ -37,8 +37,8 @@ public abstract class AbstractMapSettingContainer<T, U extends AbstractMapSettin
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void init() {
         super.init();
-        scroll = addDrawableChild(new Scrollbar(x + width - 10, y + 12, 10, height - 12, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
-        addDrawableChild(new Button(x, y, 40, 10, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.add"), (btn) -> {
+        scroll = addButton(new Scrollbar(x + width - 10, y + 12, 10, height - 12, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
+        addButton(new Button(x, y, 40, 10, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new TranslatableText("jsmacros.add"), (btn) -> {
             if (setting.hasOptions()) {
                 try {
                     List<String> options = ((List<String>) (List) setting.getOptions()).stream().filter(e -> !map.containsKey(e)).collect(Collectors.toList());
@@ -86,7 +86,7 @@ public abstract class AbstractMapSettingContainer<T, U extends AbstractMapSettin
     public void removeField(String key) throws InvocationTargetException, IllegalAccessException {
         setting.get().remove(key);
         MapSettingEntry<T> ent = map.remove(key);
-        ent.getButtons().forEach(this::remove);
+        ent.getButtons().forEach(this::removeButton);
         totalHeight -= ent.height;
         scroll.setScrollPages(totalHeight / (double) height);
         if (scroll.active) {
@@ -143,7 +143,7 @@ public abstract class AbstractMapSettingContainer<T, U extends AbstractMapSettin
         public void init() {
             super.init();
             int w = width - height;
-            keyBtn = addDrawableChild(new Button(x, y, w / 2, height, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(key), (btn) -> {
+            keyBtn = addButton(new Button(x, y, w / 2, height, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText(key), (btn) -> {
                 if (parent.setting.hasOptions()) {
                     try {
                         List<String> options = ((List<String>) (List) parent.setting.getOptions()).stream().filter(e -> !parent.map.containsKey(e)).collect(Collectors.toList());
@@ -165,7 +165,7 @@ public abstract class AbstractMapSettingContainer<T, U extends AbstractMapSettin
                     }));
                 }
             }));
-            addDrawableChild(new Button(x + w, y, height, height, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText("X"), (btn) -> {
+            addButton(new Button(x + w, y, height, height, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText("X"), (btn) -> {
                 try {
                     parent.removeField(key);
                 } catch (InvocationTargetException | IllegalAccessException e) {
@@ -177,7 +177,7 @@ public abstract class AbstractMapSettingContainer<T, U extends AbstractMapSettin
         @Override
         public void setPos(int x, int y, int width, int height) {
             super.setPos(x, y, width, height);
-            for (ClickableWidget btn : buttons) {
+            for (AbstractButtonWidget btn : buttons) {
                 btn.y = y;
             }
         }

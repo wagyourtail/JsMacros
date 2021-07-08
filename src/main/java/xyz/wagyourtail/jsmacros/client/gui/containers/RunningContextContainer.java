@@ -24,7 +24,7 @@ public class RunningContextContainer extends MultiElementContainer<CancelScreen>
     @Override
     public void init() {
         super.init();
-        cancelButton = this.addDrawableChild(new Button(x+1, y+1, height - 2, height - 2, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText("X"), (btn) -> {
+        cancelButton = this.addButton(new Button(x+1, y+1, height - 2, height - 2, textRenderer, 0, 0xFF000000, 0x7FFFFFFF, 0xFFFFFF, new LiteralText("X"), (btn) -> {
                 ScriptContext<?> ctx = t.get();
                 if (ctx != null && !ctx.isContextClosed())
                     ctx.closeContext();
@@ -44,8 +44,8 @@ public class RunningContextContainer extends MultiElementContainer<CancelScreen>
             ScriptContext<?> ctx = t.get();
             if (ctx != null && !ctx.isContextClosed()) {
                 if (this.visible) {
-                    drawCenteredText(matrices, textRenderer, textRenderer.trimToWidth(Core.instance.contexts.get(t.get()), width - 105 - height), x + (width - 105 - height) / 2 + height + 4, y+2, 0xFFFFFF);
-                    drawCenteredText(matrices, textRenderer, textRenderer.trimToWidth(DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - ctx.startTime), 100), x+width - 50 + height, y+2, 0xFFFFFF);
+                    drawCenteredString(matrices, textRenderer, textRenderer.trimToWidth(Core.instance.contexts.get(t.get()), width - 105 - height), x + (width - 105 - height) / 2 + height + 4, y+2, 0xFFFFFF);
+                    drawCenteredString(matrices, textRenderer, textRenderer.trimToWidth(DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - ctx.startTime), 100), x+width - 50 + height, y+2, 0xFFFFFF);
                     fill(matrices, x+width-101, y, x+width-100, y+height, 0xFFFFFFFF);
                     fill(matrices, x+height, y, x+height+1, y+height, 0xFFFFFFFF);
                     // border

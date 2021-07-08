@@ -20,7 +20,7 @@ public class PrimitiveSettingGroup extends AbstractSettingContainer {
     
     @Override
     public void init() {
-        scroll = addDrawableChild(new Scrollbar(x + width - 10, y, 10, height, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
+        scroll = addButton(new Scrollbar(x + width - 10, y, 10, height, 0, 0xFF000000, 0xFFFFFFFF, 2, this::onScrollbar));
     }
     
     public void onScrollbar(double page) {

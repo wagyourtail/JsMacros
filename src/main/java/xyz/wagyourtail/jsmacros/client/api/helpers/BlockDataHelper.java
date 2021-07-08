@@ -3,7 +3,7 @@ package xyz.wagyourtail.jsmacros.client.api.helpers;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
@@ -77,7 +77,7 @@ public class BlockDataHelper extends BaseHelper<BlockState> {
     public Map<String, String> getNBT() {
         if (e == null) return null;
         Map<String, String> m = new HashMap<>();
-        NbtCompound t = e.toInitialChunkDataNbt();
+        CompoundTag t = e.toInitialChunkDataTag();
         for (String s : t.getKeys()) {
             m.put(s, t.get(s).asString());
         }

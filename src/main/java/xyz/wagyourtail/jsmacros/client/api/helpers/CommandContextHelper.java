@@ -6,7 +6,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.minecraft.command.argument.BlockStateArgument;
 import net.minecraft.command.argument.ItemStackArgument;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import xyz.wagyourtail.jsmacros.core.helpers.BaseHelper;
@@ -24,7 +24,7 @@ public class CommandContextHelper extends BaseHelper<CommandContext<FabricClient
             arg = arg.toString();
         } else if (arg instanceof ItemStackArgument) {
             arg = new ItemStackHelper(((ItemStackArgument) arg).createStack(1, false));
-        } else if (arg instanceof NbtCompound) {
+        } else if (arg instanceof CompoundTag) {
             arg = arg.toString();
         } else if (arg instanceof Text) {
             arg = new TextHelper((Text) arg);
