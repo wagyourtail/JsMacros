@@ -29,7 +29,8 @@
     "events.MixinMinecraftClient",
     "events.MixinMouse",
     "events.MixinScreen",
-    "events.MixinSoundSystem"
+    "events.MixinSoundSystem",
+    "events.MixinSplashOverlay"
   ],
   "injectors": {
     "defaultRequire": 1
